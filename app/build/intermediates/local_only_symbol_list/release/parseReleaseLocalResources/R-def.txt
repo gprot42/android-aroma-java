@@ -1,0 +1,31 @@
+R_DEF: Internal format may change without notice
+local
+drawable splash
+drawable splash_background
+id auth_token_edit
+id file_list
+id status_text
+id storage_info
+id toggle_button
+id use_tunnel_checkbox
+layout activity_main
+mipmap ic_launcher
+mipmap splash
+string app_name
+string enter_ngrok_authtoken
+string enter_ngrok_token_prompt
+string failed_to_start_server
+string failed_to_start_tunnel
+string selected_file
+string server_not_running
+string server_started
+string server_stopped
+string start_server
+string stop_server
+string storage_calc_failed
+string storage_calculating
+string storage_error
+string storage_total
+string storage_used
+string use_ngrok_tunnel
+style Theme.Aroma

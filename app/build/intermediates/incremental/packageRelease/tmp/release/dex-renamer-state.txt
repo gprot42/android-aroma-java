@@ -1,0 +1,7 @@
+#Sun Aug 17 19:07:59 CEST 2025
+base.1=/Users/darrenevans/src/aroma/app/build/intermediates/desugar_lib_dex/release/l8DexDesugarLibRelease/classes1000.dex
+path.1=classes1000.dex
+base.0=/Users/darrenevans/src/aroma/app/build/intermediates/dex/release/mergeDexRelease/classes.dex
+renamed.1=classes2.dex
+renamed.0=classes.dex
+path.0=classes.dex

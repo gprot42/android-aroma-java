@@ -1,0 +1,27 @@
+<variant
+    name="debug"
+    package="com.example.aroma"
+    minSdkVersion="21"
+    targetSdkVersion="35"
+    debuggable="true"
+    mergedManifest="build/intermediates/merged_manifest/debug/processDebugMainManifest/AndroidManifest.xml"
+    partialResultsDir="build/intermediates/unit_test_lint_partial_results/debug/lintAnalyzeDebugUnitTest/out"
+    desugaredMethodsFiles="/Users/darrenevans/.gradle/caches/8.14/transforms/95962b790e23e797db72a924bb8de3c5/transformed/desugar_jdk_libs_configuration-2.0.4-desugar-lint.txt:/Users/darrenevans/.gradle/caches/8.14/transforms/e93291c9a8f35fd24e5e9f385e9d1a7c/transformed/D8BackportedDesugaredMethods.txt">
+  <buildFeatures
+      coreLibraryDesugaring="true"
+      namespacing="REQUIRED"/>
+  <sourceProviders>
+  </sourceProviders>
+  <testSourceProviders>
+    <sourceProvider
+        manifests="src/test/AndroidManifest.xml"
+        javaDirectories="src/test/java:src/testDebug/java:src/test/kotlin:src/testDebug/kotlin"
+        assetsDirectories="src/test/assets:src/testDebug/assets"
+        unitTest="true"/>
+  </testSourceProviders>
+  <testFixturesSourceProviders>
+  </testFixturesSourceProviders>
+  <artifact
+      type="UNIT_TEST">
+  </artifact>
+</variant>

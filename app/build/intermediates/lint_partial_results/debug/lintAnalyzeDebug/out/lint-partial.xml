@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<incidents format="6" by="lint 8.12.0" type="partial_results">
+    <map id="UnsafeIntentLaunch">
+            <map id="unprotected">
+                <entry
+                    name="com.example.aroma.MainActivity"
+                    boolean="true"/>
+            </map>
+    </map>
+    <map id="UnusedResources">
+        <location id="R.drawable.splash"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/drawable/splash.png"/>
+        <location id="R.drawable.splash_background"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/drawable/splash_background.xml"
+            line="2"
+            column="1"
+            startOffset="39"
+            endLine="7"
+            endColumn="14"
+            endOffset="302"/>
+        <location id="R.mipmap.splash"
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/mipmap-hdpi/splash.png"/>
+        <entry
+            name="model"
+            string="drawable[splash(D),splash_background(D)],id[status_text(U),storage_info(U),file_list(U),auth_token_edit(U),use_tunnel_checkbox(U),toggle_button(U)],layout[activity_main(U)],mipmap[ic_launcher(U),splash(D)],string[app_name(U),server_not_running(U),storage_calculating(U),enter_ngrok_authtoken(U),use_ngrok_tunnel(U),start_server(U),stop_server(U),server_started(U),server_stopped(U),failed_to_start_server(U),failed_to_start_tunnel(U),storage_error(U),storage_calc_failed(U),storage_used(U),storage_total(U),selected_file(U),enter_ngrok_token_prompt(U)],style[Theme_Aroma(U),Theme_AppCompat_Light_NoActionBar(R)];1^0,8^c^d^e^f^10,1c^1d^9;;;"/>
+    </map>
+
+</incidents>

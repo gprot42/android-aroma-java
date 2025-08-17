@@ -1,0 +1,20 @@
+<lint-module
+    format="1"
+    dir="/Users/darrenevans/src/aroma/app"
+    name=":app"
+    type="APP"
+    maven="AROMA:app:unspecified"
+    agpVersion="8.12.0"
+    buildFolder="build"
+    bootClassPath="/opt/homebrew/share/android-commandlinetools/platforms/android-35/android.jar:/opt/homebrew/share/android-commandlinetools/build-tools/35.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="17"
+    compileTarget="android-35"
+    neverShrinking="true">
+  <lintOptions
+      baselineFile="lint-baseline.xml"
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="debug"/>
+</lint-module>

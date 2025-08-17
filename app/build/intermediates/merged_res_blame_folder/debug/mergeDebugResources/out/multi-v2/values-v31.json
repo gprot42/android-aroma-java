@@ -1,0 +1,52 @@
+{
+    "logs": [
+        {
+            "outputFile": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-mergeDebugResources-23:/values-v31/values-v31.xml",
+            "map": [
+                {
+                    "source": "/Users/darrenevans/src/aroma/app/src/main/res/values-v31/themes.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "102",
+                        "endLines": "6",
+                        "endColumns": "12",
+                        "endOffsets": "421"
+                    },
+                    "to": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "6",
+                        "endColumns": "12",
+                        "endOffsets": "374"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.example.aroma.app-mergeDebugResources-23:/values-v31/values-v31.xml",
+            "map": [
+                {
+                    "source": "/Users/darrenevans/src/aroma/app/src/main/res/values-v31/themes.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "102",
+                        "endLines": "6",
+                        "endColumns": "12",
+                        "endOffsets": "421"
+                    },
+                    "to": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "6",
+                        "endColumns": "12",
+                        "endOffsets": "374"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,54 @@
+[
+    {
+        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-debug-25:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-27:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-debug-25:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-27:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.aroma.app-debug-25:/drawable_splash.png.flat",
+        "source": "com.example.aroma.app-main-27:/drawable/splash.png"
+    },
+    {
+        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-debug-25:/mipmap-xhdpi_splash.png.flat",
+        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-27:/mipmap-xhdpi/splash.png"
+    },
+    {
+        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-debug-25:/mipmap-xxxhdpi_splash.png.flat",
+        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-27:/mipmap-xxxhdpi/splash.png"
+    },
+    {
+        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-debug-25:/mipmap-xxhdpi_splash.png.flat",
+        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-27:/mipmap-xxhdpi/splash.png"
+    },
+    {
+        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-debug-25:/mipmap-hdpi_splash.png.flat",
+        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-27:/mipmap-hdpi/splash.png"
+    },
+    {
+        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-debug-25:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-27:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-debug-25:/drawable_splash_background.xml.flat",
+        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-27:/drawable/splash_background.xml"
+    },
+    {
+        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-debug-25:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-27:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-debug-25:/layout_activity_main.xml.flat",
+        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-27:/layout/activity_main.xml"
+    },
+    {
+        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-debug-25:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-27:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-debug-25:/mipmap-mdpi_splash.png.flat",
+        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-27:/mipmap-mdpi/splash.png"
+    }
+]

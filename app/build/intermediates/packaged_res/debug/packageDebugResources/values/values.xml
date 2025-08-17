@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AROMA</string>
+    <string name="enter_ngrok_authtoken">Enter ngrok authtoken (required for tunneling)</string>
+    <string name="enter_ngrok_token_prompt">Enter ngrok authtoken for tunneling</string>
+    <string name="failed_to_start_server">Failed to start server:</string>
+    <string name="failed_to_start_tunnel">Failed to start tunnel:</string>
+    <string name="selected_file">Selected: </string>
+    <string name="server_not_running">Server not running</string>
+    <string name="server_started">Server started</string>
+    <string name="server_stopped">Server stopped</string>
+    <string name="start_server">Start Server</string>
+    <string name="stop_server">Stop Server</string>
+    <string name="storage_calc_failed">Storage calc failed: Check permissions</string>
+    <string name="storage_calculating">Storage: Calculating...</string>
+    <string name="storage_error">Storage: Error calculating</string>
+    <string name="storage_total"> total</string>
+    <string name="storage_used"> used / </string>
+    <string name="use_ngrok_tunnel">Use ngrok tunnel for remote/mobile access</string>
+    <style name="Theme.Aroma" parent="Theme.AppCompat.Light.NoActionBar">
+        
+    </style>
+</resources>
