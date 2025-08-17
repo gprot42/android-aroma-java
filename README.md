@@ -129,7 +129,7 @@ Usage 📖
 * 4.The app will generate a public ngrok URL—share or use it in a browser.
 * 5.Access the device remotely at http://localhost:8080 (local) or the ngrok URL (remote).
 
---
+---
 
 🐞 Debugging
 * Clear logs: adb logcat -c
@@ -137,19 +137,19 @@ Usage 📖
 * Test connectivity: adb shell ping google.com
 * Interact with filesystem: adb shell ls /sdcard/Download
 
---
+---
 
 📚 Dependencies
 * Gradle: 8.12.0 (via buildscript)
 * Repositories: Google, Maven Central
 * Libraries: java-ngrok (integrated for tunneling)
 
---
+---
 
 📄 License
 * Licensed under the Apache License, Version 2.0. See LICENSE for details.
 
---
+---
 
 Contributing 🤝
 * Fork the repository, make changes, and submit a pull request. For issues, use the GitHub issue tracker.
