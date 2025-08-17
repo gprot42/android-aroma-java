@@ -1,5 +1,5 @@
 
-
+```
 cat ~/.android/avd/emulate-android15.ini
 avd.ini.encoding=UTF-8
 path=/Users/darrenevans/.android/avd/emulate-android15.avd
@@ -45,3 +45,4 @@ $ adb shell ls /sdcard/Download
 
 # Point your web browser to
 http://localhost:8080
+```
