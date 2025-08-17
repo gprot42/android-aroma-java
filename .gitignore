@@ -1,0 +1,16 @@
+# Gradle
+.gradle/
+build/
+*.iml  # IntelliJ files
+
+# IDEs
+.idea/
+*.DS_Store  # macOS files
+
+# Logs and temp files
+*.log
+tmp/
+temp/
+
+# Dependencies (if not using wrapper)
+gradle/
