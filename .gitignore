@@ -14,3 +14,64 @@ temp/
 
 # Dependencies (if not using wrapper)
 gradle/
+
+# Byte-compiled / optimized / DLL files (Python-specific)
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Dependencies and virtual environments
+node_modules/
+venv/
+.venv/
+pip-wheel-metadata/
+*.egg-info/
+
+# Build artifacts and distributions
+dist/
+build/
+target/
+*.egg
+*.whl
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+~*
+.*.swp
+
+# OS-generated files
+.DS_Store  # macOS
+Thumbs.db  # Windows
+ehthumbs.db
+Desktop.ini
+*.~lock.*
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Environment and secrets
+.env
+.env.local
+secrets.json
+config.json
+
+# Coverage and testing
+coverage/
+.tox/
+.pytest_cache/
+.mypy_cache/
+
+# Databases and dumps
+*.sqlite
+*.sql.dump
+dump.rdb
+
+# Ignore everything in a folder except a specific file (example)
+#folder_name/*
+#!folder_name/keepme.txt
