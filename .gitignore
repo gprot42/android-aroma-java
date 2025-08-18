@@ -75,3 +75,6 @@ dump.rdb
 # Ignore everything in a folder except a specific file (example)
 #folder_name/*
 #!folder_name/keepme.txt
+
+# Virtual environments
+.venv
