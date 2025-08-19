@@ -64,6 +64,7 @@ Desktop.ini
 .env.local
 secrets.json
 config.json
+gcs-key.json
 
 # Coverage and testing
 coverage/
