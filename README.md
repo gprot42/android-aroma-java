@@ -128,6 +128,10 @@ Usage 📖
 * 3.Start the local HTTP server (via app UI).
 * 4.The app will generate a public ngrok URL—share or use it in a browser.
 * 5.Access the device remotely at http://localhost:8080 (local) or the ngrok URL (remote).
+* 6.You can automate uploading of your file with curl like this
+```bash
+curl -u admin:password -F "uploadedFile=@/Users/myuser/Downloads/app-release.apk" http://192.168.1.67:8080/
+```
 
 ---
 
