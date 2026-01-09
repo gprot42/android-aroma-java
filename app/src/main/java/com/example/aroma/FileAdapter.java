@@ -36,6 +36,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         File file = files.get(position);
         holder.textView.setText(file.getName() + (file.isDirectory() ? "/" : ""));
+        holder.textView.setTextColor(0xFFFFFFFF);
         holder.itemView.setOnClickListener(v -> listener.onFileClick(file));
     }
 
