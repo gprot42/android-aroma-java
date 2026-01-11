@@ -22,6 +22,8 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -90,6 +92,7 @@ public class MainActivity extends Activity implements ServerEventListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        applyTheme();
         setContentView(R.layout.activity_main);
 
         toggleButton = findViewById(R.id.toggle_button);
@@ -109,6 +112,56 @@ public class MainActivity extends Activity implements ServerEventListener {
         activityLogScroll = findViewById(R.id.activity_log_scroll);
 
         requestPermissions();
+    }
+
+    private void applyTheme() {
+        CredentialsManager cm = new CredentialsManager(this);
+        int theme = cm.getTheme();
+        if (theme == CredentialsManager.THEME_LIGHT) {
+            setTheme(R.style.Theme_Aroma_Light);
+        } else {
+            setTheme(R.style.Theme_Aroma_Dark);
+        }
+    }
+
+    private void applyThemeColors() {
+        CredentialsManager cm = new CredentialsManager(this);
+        boolean isDark = cm.getTheme() == CredentialsManager.THEME_DARK;
+        
+        View rootView = findViewById(android.R.id.content);
+        if (rootView != null) {
+            View mainLayout = ((android.view.ViewGroup) rootView).getChildAt(0);
+            if (mainLayout != null) {
+                mainLayout.setBackgroundColor(isDark ? 0xFF1a1a2e : 0xFFf5f5f5);
+            }
+        }
+        
+        int panelColor = isDark ? 0xFF16213e : 0xFFffffff;
+        int textColor = isDark ? 0xFFffffff : 0xFF111111;
+        int textSecondary = isDark ? 0xFF888888 : 0xFF666666;
+        int inputBg = isDark ? 0xFF0d0d1a : 0xFFffffff;
+        
+        View statusCard = findViewById(R.id.status_card);
+        if (statusCard != null) statusCard.setBackgroundColor(panelColor);
+        
+        View activityContainer = findViewById(R.id.activity_log_container);
+        if (activityContainer != null) activityContainer.setBackgroundColor(panelColor);
+        
+        fileListRecyclerView.setBackgroundColor(panelColor);
+        
+        View controlsPanel = toggleButton.getParent() instanceof LinearLayout ? (LinearLayout) toggleButton.getParent() : null;
+        if (controlsPanel != null) controlsPanel.setBackgroundColor(panelColor);
+        
+        authTokenEditText.setBackgroundColor(inputBg);
+        authTokenEditText.setTextColor(textColor);
+        authTokenEditText.setHintTextColor(textSecondary);
+        
+        useTunnelCheckBox.setTextColor(textSecondary);
+        storageInfoText.setTextColor(textSecondary);
+        activityLogText.setTextColor(textSecondary);
+        
+        settingsButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(panelColor));
+        qrButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(panelColor));
     }
 
     private void requestPermissions() {
@@ -171,6 +224,8 @@ public class MainActivity extends Activity implements ServerEventListener {
         toggleButton.setOnClickListener(v -> toggleServer());
         qrButton.setOnClickListener(v -> toggleQrCode());
         settingsButton.setOnClickListener(v -> openSettings());
+
+        applyThemeColors();
 
         Intent serviceIntent = new Intent(this, ServerService.class);
         startService(serviceIntent);
@@ -354,7 +409,7 @@ public class MainActivity extends Activity implements ServerEventListener {
         if (rootDir != null) {
             File[] filesArray = rootDir.listFiles();
             List<File> files = filesArray != null ? Arrays.asList(filesArray) : new ArrayList<>();
-            FileAdapter adapter = new FileAdapter(files, file ->
+            FileAdapter adapter = new FileAdapter(this, files, file ->
                     Toast.makeText(MainActivity.this, getString(R.string.selected_file) + file.getName(), Toast.LENGTH_SHORT).show()
             );
             fileListRecyclerView.setAdapter(adapter);
@@ -394,6 +449,7 @@ public class MainActivity extends Activity implements ServerEventListener {
                     File storageDir = getStorageDir();
                     folderPathText.setText("Folder: " + (storageDir != null ? storageDir.getAbsolutePath() : "Not available"));
                     updateUIState();
+                    applyThemeColors();
                 }
             }
         } else {
@@ -402,6 +458,7 @@ public class MainActivity extends Activity implements ServerEventListener {
             } else {
                 updateFileList();
                 updateUIState();
+                applyThemeColors();
             }
         }
     }

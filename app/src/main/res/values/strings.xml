@@ -61,6 +61,6 @@
     
     <!-- About -->
     <string name="about_section">About</string>
-    <string name="app_version">AROMA v0.2</string>
+    <string name="app_version">AROMA v0.0.3</string>
     <string name="app_description">Android Remote Online Management App - Access your device files remotely via web browser.</string>
 </resources>
