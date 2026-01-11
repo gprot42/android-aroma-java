@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -250,13 +251,27 @@ public class WebServer extends NanoHTTPD {
         html.append("<div class='sidebar'>");
         
         html.append("<div class='panel'>");
-        html.append("<h2>Upload Files</h2>");
-        html.append("<form method='post' enctype='multipart/form-data'>");
+        html.append("<h2>Upload</h2>");
         html.append("<div class='form-group'>");
-        html.append("<input type='file' name='uploadedFile'>");
+        html.append("<input type='file' name='uploadedFile' multiple id='fileInput' style='display:none'>");
+        html.append("<input type='file' name='uploadedFile' webkitdirectory id='folderInput' style='display:none'>");
+        html.append("<div style='display:flex;gap:8px;flex-wrap:wrap'>");
+        html.append("<button type='button' class='btn btn-secondary' onclick='document.getElementById(\"fileInput\").click()'>Select Files</button>");
+        html.append("<button type='button' class='btn btn-secondary' onclick='document.getElementById(\"folderInput\").click()'>Select Folder</button>");
         html.append("</div>");
-        html.append("<button type='submit' class='btn btn-primary'>Upload</button>");
-        html.append("</form>");
+        html.append("<div id='selectedFiles' style='margin-top:10px;font-size:0.85em;color:var(--meta)'></div>");
+        html.append("</div>");
+        html.append("<div id='uploadProgress' style='display:none;margin-bottom:10px'>");
+        html.append("<div style='background:var(--input-border);border-radius:4px;height:8px;overflow:hidden'>");
+        html.append("<div id='progressBar' style='background:#4da6ff;height:100%;width:0%;transition:width 0.2s'></div>");
+        html.append("</div>");
+        html.append("<div id='progressText' style='font-size:0.8em;color:var(--meta);margin-top:5px'>0 / 0</div>");
+        html.append("</div>");
+        html.append("<label style='display:flex;align-items:center;gap:8px;font-size:0.85em;color:var(--meta);margin-bottom:10px;cursor:pointer'>");
+        html.append("<input type='checkbox' id='overwriteCheck' style='width:16px;height:16px;accent-color:#4da6ff'>");
+        html.append("Overwrite existing files");
+        html.append("</label>");
+        html.append("<button type='button' class='btn btn-primary' id='uploadBtn' disabled onclick='startUpload()'>Upload</button>");
         html.append("</div>");
         
         html.append("<div class='panel'>");
@@ -278,6 +293,7 @@ public class WebServer extends NanoHTTPD {
         html.append("<div class='context-menu-item' onclick='showRenameModal()'><span>&#9998;</span> Rename</div>");
         html.append("<div class='context-menu-item' onclick='copyPath()'><span>&#128203;</span> Copy Path</div>");
         html.append("<div class='context-menu-divider'></div>");
+        html.append("<div class='context-menu-item' onclick='createFolderFromMenu()'><span>&#128193;</span> New Folder</div>");
         html.append("<div class='context-menu-item danger' onclick='deleteItem()'><span>&#128465;</span> Delete</div>");
         html.append("</div>");
         
@@ -345,11 +361,14 @@ public class WebServer extends NanoHTTPD {
         // JavaScript
         html.append("<script>");
         html.append("let currentItem={name:'',isDir:false,link:''};");
+        html.append("let isEmptyAreaClick=false;");
         html.append("function initTheme(){let t=localStorage.getItem('aroma-theme')||'light';document.body.setAttribute('data-theme',t)}");
         html.append("function toggleTheme(){let t=document.body.getAttribute('data-theme')==='dark'?'light':'dark';document.body.setAttribute('data-theme',t);localStorage.setItem('aroma-theme',t)}");
         html.append("function showModal(id){document.getElementById(id).classList.add('show')}");
         html.append("function hideModal(id){document.getElementById(id).classList.remove('show')}");
-        html.append("function showContextMenu(e,name,isDir,link){e.preventDefault();currentItem={name,isDir,link};let m=document.getElementById('contextMenu');m.style.left=e.pageX+'px';m.style.top=e.pageY+'px';m.classList.add('show')}");
+        html.append("function showContextMenu(e,name,isDir,link){e.preventDefault();e.stopPropagation();currentItem={name,isDir,link};isEmptyAreaClick=false;let m=document.getElementById('contextMenu');m.style.left=e.pageX+'px';m.style.top=e.pageY+'px';m.classList.add('show');updateContextMenuItems(false)}");
+        html.append("function showEmptyContextMenu(e){e.preventDefault();isEmptyAreaClick=true;currentItem={name:'',isDir:false,link:''};let m=document.getElementById('contextMenu');m.style.left=e.pageX+'px';m.style.top=e.pageY+'px';m.classList.add('show');updateContextMenuItems(true)}");
+        html.append("function updateContextMenuItems(emptyArea){let items=document.querySelectorAll('.context-menu-item');items.forEach(item=>{let t=item.textContent.trim();if(emptyArea){item.style.display=(t.includes('New Folder'))?'flex':'none'}else{item.style.display='flex'}})}");
         html.append("document.addEventListener('click',()=>document.getElementById('contextMenu').classList.remove('show'));");
         html.append("document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show'));document.getElementById('contextMenu').classList.remove('show')}if(e.ctrlKey&&e.key==='a'){e.preventDefault();selectAll()}});");
         html.append("function openItem(){window.location.href=currentItem.link+(currentItem.isDir?'/':'')}");
@@ -358,8 +377,16 @@ public class WebServer extends NanoHTTPD {
         html.append("function showRenameModal(){document.getElementById('renameOldName').value=currentItem.name;document.getElementById('renameCurrentDisplay').textContent=currentItem.name;document.getElementById('renameNewName').value=currentItem.name;showModal('renameModal');document.getElementById('renameNewName').select()}");
         html.append("function copyPath(){navigator.clipboard.writeText(window.location.origin+currentItem.link).then(()=>alert('Path copied!'))}");
         html.append("function deleteItem(){if(confirm('Delete \"'+currentItem.name+'\"?')){let f=document.createElement('form');f.method='post';f.innerHTML='<input name=\"action\" value=\"delete\"><input name=\"selected\" value=\"'+currentItem.name+'\">';document.body.appendChild(f);f.submit()}}");
+        html.append("function createFolderFromMenu(){showModal('createFolderModal');document.getElementById('newFolderName').focus()}");
         html.append("function selectAll(){document.querySelectorAll('input[name=selected]').forEach(c=>c.checked=true)}");
         html.append("function selectNone(){document.querySelectorAll('input[name=selected]').forEach(c=>c.checked=false)}");
+        html.append("let activeInput=null;let uploadFiles=[];");
+        html.append("function updateFileStatus(){let fi=document.getElementById('fileInput');let fo=document.getElementById('folderInput');let sf=document.getElementById('selectedFiles');let btn=document.getElementById('uploadBtn');let allFiles=activeInput==='file'?Array.from(fi.files):(activeInput==='folder'?Array.from(fo.files):[]);uploadFiles=allFiles.filter(f=>{let n=(f.webkitRelativePath||f.name).split('/').pop();return!n.startsWith('.')&&n!=='Thumbs.db'&&n!=='desktop.ini'});let count=uploadFiles.length;if(count>0){let names=uploadFiles.map(f=>f.webkitRelativePath||f.name);sf.innerHTML=count+' file(s) selected:<br>'+names.slice(0,5).join(', ')+(names.length>5?' ...':'');btn.disabled=false}else{sf.textContent='';btn.disabled=true}}");
+        html.append("document.getElementById('fileInput').addEventListener('change',function(){activeInput='file';updateFileStatus()});");
+        html.append("document.getElementById('folderInput').addEventListener('change',function(){activeInput='folder';updateFileStatus()});");
+        html.append("const CONCURRENCY=4;");
+        html.append("async function startUpload(){if(uploadFiles.length===0)return;let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');let txt=document.getElementById('progressText');let overwrite=document.getElementById('overwriteCheck').checked;btn.disabled=true;btn.textContent='Uploading...';prog.style.display='block';let total=uploadFiles.length;let done=0;let success=0;let skipped=0;let failed=[];let queue=[...uploadFiles];async function worker(){while(queue.length>0){let file=queue.shift();if(!file)continue;let fname=file.webkitRelativePath||file.name;try{let fd=new FormData();fd.append('uploadedFile',file,fname);fd.append('originalPath',fname);if(overwrite)fd.append('overwrite','true');let res=await fetch(window.location.pathname,{method:'POST',body:fd});if(res.ok)success++;else{let t=await res.text();if(t.includes('exists')){skipped++;failed.push(fname+' (exists)')}else{failed.push(fname)}}}catch(e){failed.push(fname+' (error)')}done++;bar.style.width=(done/total*100)+'%';txt.textContent=done+' / '+total}}let workers=[];for(let i=0;i<CONCURRENCY;i++)workers.push(worker());await Promise.all(workers);btn.textContent='Upload';prog.style.display='none';bar.style.width='0%';let msg='Uploaded: '+success;if(skipped>0)msg+='\\nSkipped (exists): '+skipped;if(failed.length>skipped)msg+='\\nFailed: '+(failed.length-skipped);alert(msg);location.reload()}");
+        html.append("document.querySelector('.file-list').addEventListener('contextmenu',function(e){if(e.target===this||e.target.classList.contains('empty')){showEmptyContextMenu(e)}});");
         html.append("initTheme();");
         html.append("</script>");
         
@@ -586,22 +613,83 @@ public class WebServer extends NanoHTTPD {
             }
         }
 
-        // Handle upload
-        String uploadKey = "uploadedFile";
-        if (files.containsKey(uploadKey)) {
-            String tempLocation = files.get(uploadKey);
-            String originalName = session.getParameters().get(uploadKey).get(0);
-            if (originalName == null || originalName.isEmpty()) originalName = "uploaded_file";
-            File tempFile = new File(tempLocation);
-            File targetFile = new File(currentDir, originalName);
+        // Handle upload (supports multiple files and folder uploads)
+        List<String> uploadedFileNames = new ArrayList<>();
+        List<String> failedFiles = new ArrayList<>();
+        long totalSize = 0;
+        
+        // Check if overwrite mode is enabled
+        List<String> overwriteValues = params.get("overwrite");
+        boolean overwriteMode = overwriteValues != null && !overwriteValues.isEmpty() && "true".equals(overwriteValues.get(0));
+        
+        for (String key : files.keySet()) {
+            if (!key.startsWith("uploadedFile")) continue;
             
-            if (targetFile.exists()) {
-                tempFile.delete();
-                return buildErrorResponse("Upload Failed", "A file named '" + originalName + "' already exists. Delete or rename the existing file first.", uri);
+            String tempLocation = files.get(key);
+            List<String> paramValues = session.getParameters().get(key);
+            if (paramValues == null || paramValues.isEmpty()) continue;
+            
+            // Try to get the original path from the separate form field (better UTF-8 handling)
+            List<String> originalPathValues = session.getParameters().get("originalPath");
+            String originalName = (originalPathValues != null && !originalPathValues.isEmpty()) 
+                ? originalPathValues.get(0) 
+                : paramValues.get(0);
+            if (originalName == null || originalName.isEmpty()) continue;
+            
+            // Skip hidden/system files
+            String fileName = originalName.contains("/") ? originalName.substring(originalName.lastIndexOf("/") + 1) : originalName;
+            if (fileName.startsWith(".") || fileName.equals("Thumbs.db") || fileName.equals("desktop.ini")) {
+                Log.d("AROMA", "Skipping hidden/system file: " + originalName);
+                new File(tempLocation).delete();
+                continue;
             }
             
-            Log.d("AROMA", "Temp file exists: " + tempFile.exists() + ", can read: " + tempFile.canRead());
-            Log.d("AROMA", "Target dir writable: " + currentDir.canWrite() + ", path: " + currentDir.getAbsolutePath());
+            // Handle folder structure (webkitRelativePath includes folder/file.ext)
+            String targetPath = originalName.replace("\\", "/");
+            if (targetPath.contains("..") || targetPath.startsWith("/")) {
+                failedFiles.add(originalName + " (invalid path)");
+                continue;
+            }
+            
+            File tempFile = new File(tempLocation);
+            File targetFile = new File(currentDir, targetPath);
+            
+            // Create parent directories for folder uploads
+            File parentDir = targetFile.getParentFile();
+            if (parentDir != null && !parentDir.equals(currentDir)) {
+                if (!parentDir.exists() && !parentDir.mkdirs()) {
+                    Log.e("AROMA", "Cannot create directory for: " + originalName);
+                    failedFiles.add(originalName + " (cannot create directory)");
+                    tempFile.delete();
+                    continue;
+                }
+            }
+            
+            if (targetFile.exists()) {
+                if (overwriteMode) {
+                    Log.d("AROMA", "Overwriting existing file: " + originalName);
+                    if (!targetFile.delete()) {
+                        Log.e("AROMA", "Cannot delete existing file for overwrite: " + originalName);
+                        failedFiles.add(originalName + " (cannot overwrite)");
+                        tempFile.delete();
+                        continue;
+                    }
+                } else {
+                    Log.d("AROMA", "File already exists: " + originalName);
+                    failedFiles.add(originalName + " (already exists)");
+                    tempFile.delete();
+                    continue;
+                }
+            }
+            
+            // Verify temp file
+            if (!tempFile.exists() || !tempFile.canRead()) {
+                Log.e("AROMA", "Temp file issue for " + originalName + ": exists=" + tempFile.exists() + ", canRead=" + tempFile.canRead());
+                failedFiles.add(originalName + " (temp file error)");
+                continue;
+            }
+            
+            Log.d("AROMA", "Uploading: " + originalName + " -> " + targetFile.getAbsolutePath());
             boolean success = false;
             try (InputStream is = new FileInputStream(tempFile);
                  OutputStream os = new FileOutputStream(targetFile)) {
@@ -611,19 +699,33 @@ public class WebServer extends NanoHTTPD {
                     os.write(buffer, 0, bytesRead);
                 }
                 success = true;
-                tempFile.delete();  // Clean up temp file
+                totalSize += targetFile.length();
+                tempFile.delete();
             } catch (Exception e) {
-                Log.e("AROMA", "Copy failed: " + e.getMessage());
+                Log.e("AROMA", "Copy failed for " + originalName + ": " + e.getMessage());
+                failedFiles.add(originalName + " (" + e.getMessage() + ")");
             }
-            Log.d("AROMA", "Upload attempt: " + originalName + ", success: " + success);
+            
             if (success) {
-                Log.d("AROMA", "File uploaded to: " + targetFile.getAbsolutePath());
+                uploadedFileNames.add(originalName);
                 if (eventListener != null) {
                     eventListener.onFileUploaded(originalName, getClientIp(session));
                 }
                 MediaScannerConnection.scanFile(context, new String[]{targetFile.getAbsolutePath()}, null, null);
-                long fileSize = targetFile.length();
-                String sizeStr = formatFileSize(fileSize);
+            } else if (!failedFiles.contains(originalName)) {
+                failedFiles.add(originalName + " (copy failed)");
+            }
+        }
+        
+        if (!uploadedFileNames.isEmpty() || !failedFiles.isEmpty()) {
+            int successCount = uploadedFileNames.size();
+            int failCount = failedFiles.size();
+            
+            if (failCount == 0) {
+                String sizeStr = formatFileSize(totalSize);
+                String fileList = successCount <= 5 
+                    ? String.join(", ", uploadedFileNames) 
+                    : uploadedFileNames.subList(0, 5).toString().replace("[", "").replace("]", "") + " ...";
                 String successHtml = "<!DOCTYPE html><html><head><meta charset='UTF-8'>" +
                         "<meta http-equiv='refresh' content='3;url=" + uri + "'>" +
                         "<style>" +
@@ -631,35 +733,24 @@ public class WebServer extends NanoHTTPD {
                         ".card{background:#fff;border-radius:12px;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,0.1);text-align:center;max-width:500px}" +
                         ".icon{font-size:64px;margin-bottom:16px}" +
                         ".title{color:#155724;font-size:24px;margin-bottom:8px}" +
-                        ".filename{color:#333;font-size:18px;word-break:break-all;background:#f8f9fa;padding:12px;border-radius:8px;margin:16px 0}" +
+                        ".count{color:#333;font-size:18px;margin:8px 0}" +
+                        ".filename{color:#333;font-size:14px;word-break:break-all;background:#f8f9fa;padding:12px;border-radius:8px;margin:16px 0;max-height:150px;overflow-y:auto}" +
                         ".size{color:#666;font-size:14px}" +
                         ".redirect{color:#666;font-size:12px;margin-top:20px}" +
                         "</style></head><body>" +
                         "<div class='card'>" +
                         "<div class='icon'>&#10004;</div>" +
                         "<div class='title'>Upload Successful!</div>" +
-                        "<div class='filename'>" + originalName + "</div>" +
-                        "<div class='size'>Size: " + sizeStr + "</div>" +
+                        "<div class='count'>" + successCount + " file(s) uploaded</div>" +
+                        "<div class='filename'>" + escapeHtml(fileList) + "</div>" +
+                        "<div class='size'>Total size: " + sizeStr + "</div>" +
                         "<div class='redirect'>Redirecting in 3 seconds...</div>" +
                         "</div></body></html>";
                 return newFixedLengthResponse(Response.Status.OK, "text/html", successHtml);
             } else {
-                Log.e("AROMA", "Upload failed for " + originalName + ": File copy failed");
-                String errorHtml = "<!DOCTYPE html><html><head><meta charset='UTF-8'>" +
-                        "<style>" +
-                        "body{font-family:system-ui,sans-serif;background:#f8d7da;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0}" +
-                        ".card{background:#fff;border-radius:12px;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,0.1);text-align:center;max-width:500px}" +
-                        ".icon{font-size:64px;margin-bottom:16px}" +
-                        ".title{color:#721c24;font-size:24px;margin-bottom:8px}" +
-                        ".back{margin-top:20px}" +
-                        ".back a{color:#721c24;text-decoration:underline}" +
-                        "</style></head><body>" +
-                        "<div class='card'>" +
-                        "<div class='icon'>&#10008;</div>" +
-                        "<div class='title'>Upload Failed</div>" +
-                        "<div class='back'><a href='" + uri + "'>Go Back</a></div>" +
-                        "</div></body></html>";
-                return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/html", errorHtml);
+                String details = "Uploaded: " + successCount + "\nFailed: " + failCount + "\n\n" + String.join("\n", failedFiles);
+                return buildResultResponse("Upload Completed with Errors", 
+                    successCount + " succeeded, " + failCount + " failed", details, uri, false);
             }
         }
 
