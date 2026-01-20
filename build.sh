@@ -1,7 +1,32 @@
 #!/bin/bash
 
-VERSION="0.0.4"
+VERSION="0.0.5"
 OUTPUT_DIR="/Users/aicoder/src/grapheneos-shizuku/apks"
+
+show_help() {
+    echo "AROMA Build Script v${VERSION}"
+    echo ""
+    echo "Usage: ./build.sh [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --help      Show this help message"
+    echo "  --release   Build release APK, sign it, and create GitHub release"
+    echo "  (no args)   Build debug APK and copy to ~/Downloads"
+    echo ""
+    echo "Examples:"
+    echo "  ./build.sh              Build debug APK"
+    echo "  ./build.sh --release    Build and release signed APK"
+    echo "  ./build.sh --help       Show this help"
+    echo ""
+    echo "Output locations:"
+    echo "  Debug APK:   ~/Downloads/aroma-debug-${VERSION}.apk"
+    echo "  Release APK: ${OUTPUT_DIR}/aroma-release-${VERSION}-signed.apk"
+}
+
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+    show_help
+    exit 0
+fi
 
 if [ "$1" == "--release" ]; then
     echo "Building release APK..."
@@ -51,6 +76,12 @@ if [ "$1" == "--release" ]; then
     gh release create "v${VERSION}" "$SIGNED_APK" \
         --title "AROMA v${VERSION}" \
         --notes "## AROMA v${VERSION}
+
+### New in this release
+- Upload progress bar with percentage, speed, and byte tracking
+- Remote terminal shell (/terminal) for executing commands on device
+- File info panel showing size and details when selecting files
+- Fixed Firefox POST resubmit warning (PRG pattern)
 
 ### Features
 - File manager web interface with dark/light theme support

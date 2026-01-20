@@ -70,6 +70,18 @@ public class WebServer extends NanoHTTPD {
             currentDir = new File(rootDir, uri.substring(1));
         }
 
+        if (uri.equals("/terminal")) {
+            if (method == Method.GET) {
+                return serveTerminal();
+            }
+        }
+        
+        if (uri.equals("/api/exec")) {
+            if (method == Method.POST) {
+                return handleExec(session);
+            }
+        }
+
         if (method == Method.GET) {
             if (eventListener != null) {
                 eventListener.onClientConnected(getClientIp(session));
@@ -159,6 +171,7 @@ public class WebServer extends NanoHTTPD {
         html.append("<h1>AROMA File Manager</h1>");
         html.append("<div class='header-buttons'>");
         html.append("<button class='theme-toggle' onclick='toggleTheme()' title='Toggle theme'>&#9788;</button>");
+        html.append("<a href='/terminal' class='header-btn' style='background:#28a745;border-color:#28a745;color:#fff'>Terminal</a>");
         html.append("<a href='#' class='header-btn' onclick='showModal(\"createFolderModal\");return false;'>+ New Folder</a>");
         html.append("<a href='#' class='header-btn' onclick='showModal(\"aboutModal\");return false;'>Help</a>");
         html.append("</div>");
@@ -200,7 +213,7 @@ public class WebServer extends NanoHTTPD {
                 String name = f.getName();
                 String link = uri + (uri.endsWith("/") ? "" : "/") + name;
                 String escapedName = escapeHtml(name).replace("'", "\\'");
-                html.append("<div class='file-item' oncontextmenu='showContextMenu(event,\"").append(escapedName).append("\",").append(f.isDirectory()).append(",\"").append(link).append("\")' data-name='").append(escapeHtml(name)).append("'>");
+                html.append("<div class='file-item' oncontextmenu='showContextMenu(event,\"").append(escapedName).append("\",").append(f.isDirectory()).append(",\"").append(link).append("\")' data-name='").append(escapeHtml(name)).append("' data-size='").append(f.isDirectory() ? 0 : f.length()).append("' data-modified='").append(f.lastModified()).append("'>");
                 html.append("<input type='checkbox' name='selected' value='").append(escapeHtml(name)).append("'>");
                 if (f.isDirectory()) {
                     html.append("<span class='file-icon'>&#128193;</span>");
@@ -262,16 +275,23 @@ public class WebServer extends NanoHTTPD {
         html.append("<div id='selectedFiles' style='margin-top:10px;font-size:0.85em;color:var(--meta)'></div>");
         html.append("</div>");
         html.append("<div id='uploadProgress' style='display:none;margin-bottom:10px'>");
-        html.append("<div style='background:var(--input-border);border-radius:4px;height:8px;overflow:hidden'>");
-        html.append("<div id='progressBar' style='background:#4da6ff;height:100%;width:0%;transition:width 0.2s'></div>");
+        html.append("<div style='background:var(--input-border);border-radius:4px;height:20px;overflow:hidden;position:relative'>");
+        html.append("<div id='progressBar' style='background:linear-gradient(90deg,#4da6ff,#00d4ff);height:100%;width:0%;transition:width 0.15s ease-out'></div>");
+        html.append("<div id='progressPercent' style='position:absolute;top:0;left:0;right:0;text-align:center;line-height:20px;font-size:11px;color:#fff;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.5)'>0%</div>");
         html.append("</div>");
-        html.append("<div id='progressText' style='font-size:0.8em;color:var(--meta);margin-top:5px'>0 / 0</div>");
+        html.append("<div id='progressText' style='font-size:0.8em;color:var(--meta);margin-top:8px'>0 / 0 files</div>");
+        html.append("<div id='progressSpeed' style='font-size:0.75em;color:var(--meta);margin-top:4px'></div>");
         html.append("</div>");
         html.append("<label style='display:flex;align-items:center;gap:8px;font-size:0.85em;color:var(--meta);margin-bottom:10px;cursor:pointer'>");
         html.append("<input type='checkbox' id='overwriteCheck' style='width:16px;height:16px;accent-color:#4da6ff'>");
         html.append("Overwrite existing files");
         html.append("</label>");
         html.append("<button type='button' class='btn btn-primary' id='uploadBtn' disabled onclick='startUpload()'>Upload</button>");
+        html.append("</div>");
+        
+        html.append("<div class='panel' id='fileInfoPanel' style='display:none'>");
+        html.append("<h2>File Info</h2>");
+        html.append("<div id='fileInfoContent' style='font-size:0.85em;color:var(--meta);line-height:1.6'></div>");
         html.append("</div>");
         
         html.append("<div class='panel'>");
@@ -362,6 +382,7 @@ public class WebServer extends NanoHTTPD {
         html.append("<script>");
         html.append("let currentItem={name:'',isDir:false,link:''};");
         html.append("let isEmptyAreaClick=false;");
+        html.append("const fileData={};");
         html.append("function initTheme(){let t=localStorage.getItem('aroma-theme')||'light';document.body.setAttribute('data-theme',t)}");
         html.append("function toggleTheme(){let t=document.body.getAttribute('data-theme')==='dark'?'light':'dark';document.body.setAttribute('data-theme',t);localStorage.setItem('aroma-theme',t)}");
         html.append("function showModal(id){document.getElementById(id).classList.add('show')}");
@@ -378,14 +399,21 @@ public class WebServer extends NanoHTTPD {
         html.append("function copyPath(){navigator.clipboard.writeText(window.location.origin+currentItem.link).then(()=>alert('Path copied!'))}");
         html.append("function deleteItem(){if(confirm('Delete \"'+currentItem.name+'\"?')){let f=document.createElement('form');f.method='post';f.innerHTML='<input name=\"action\" value=\"delete\"><input name=\"selected\" value=\"'+currentItem.name+'\">';document.body.appendChild(f);f.submit()}}");
         html.append("function createFolderFromMenu(){showModal('createFolderModal');document.getElementById('newFolderName').focus()}");
-        html.append("function selectAll(){document.querySelectorAll('input[name=selected]').forEach(c=>c.checked=true)}");
-        html.append("function selectNone(){document.querySelectorAll('input[name=selected]').forEach(c=>c.checked=false)}");
+        html.append("function selectAll(){document.querySelectorAll('input[name=selected]').forEach(c=>{c.checked=true});updateFileInfoPanel()}");
+        html.append("function selectNone(){document.querySelectorAll('input[name=selected]').forEach(c=>{c.checked=false});updateFileInfoPanel()}");
+        html.append("function updateFileInfoPanel(){let checked=document.querySelectorAll('input[name=selected]:checked');let panel=document.getElementById('fileInfoPanel');let content=document.getElementById('fileInfoContent');if(checked.length===0){panel.style.display='none';return}panel.style.display='block';if(checked.length===1){let name=checked[0].value;let item=checked[0].closest('.file-item');let meta=item.querySelector('.file-meta');let size=meta?meta.textContent:'';content.innerHTML='<strong>'+name+'</strong><br>'+size}else{let totalSize=0;checked.forEach(c=>{let d=fileData[c.value];if(d&&d.size)totalSize+=d.size});content.innerHTML=checked.length+' items selected<br>Total: '+formatSize(totalSize)}}");
+        html.append("function formatSize(b){if(b<=0)return'0 B';let u=['B','KB','MB','GB','TB'];let i=Math.floor(Math.log(b)/Math.log(1024));return(b/Math.pow(1024,i)).toFixed(1)+' '+u[i]}");
+        html.append("document.querySelectorAll('input[name=selected]').forEach(c=>c.addEventListener('change',updateFileInfoPanel));");
+        html.append("document.querySelectorAll('.file-item').forEach(item=>{let n=item.dataset.name;let s=parseInt(item.dataset.size)||0;let m=parseInt(item.dataset.modified)||0;fileData[n]={size:s,modified:m}});");
         html.append("let activeInput=null;let uploadFiles=[];");
-        html.append("function updateFileStatus(){let fi=document.getElementById('fileInput');let fo=document.getElementById('folderInput');let sf=document.getElementById('selectedFiles');let btn=document.getElementById('uploadBtn');let allFiles=activeInput==='file'?Array.from(fi.files):(activeInput==='folder'?Array.from(fo.files):[]);uploadFiles=allFiles.filter(f=>{let n=(f.webkitRelativePath||f.name).split('/').pop();return!n.startsWith('.')&&n!=='Thumbs.db'&&n!=='desktop.ini'});let count=uploadFiles.length;if(count>0){let names=uploadFiles.map(f=>f.webkitRelativePath||f.name);sf.innerHTML=count+' file(s) selected:<br>'+names.slice(0,5).join(', ')+(names.length>5?' ...':'');btn.disabled=false}else{sf.textContent='';btn.disabled=true}}");
+        html.append("function updateFileStatus(){let fi=document.getElementById('fileInput');let fo=document.getElementById('folderInput');let sf=document.getElementById('selectedFiles');let btn=document.getElementById('uploadBtn');let allFiles=activeInput==='file'?Array.from(fi.files):(activeInput==='folder'?Array.from(fo.files):[]);uploadFiles=allFiles.filter(f=>{let n=(f.webkitRelativePath||f.name).split('/').pop();return!n.startsWith('.')&&n!=='Thumbs.db'&&n!=='desktop.ini'});let count=uploadFiles.length;if(count>0){let totalSize=uploadFiles.reduce((a,f)=>a+f.size,0);let names=uploadFiles.map(f=>f.webkitRelativePath||f.name);sf.innerHTML=count+' file(s) selected ('+formatSize(totalSize)+'):<br>'+names.slice(0,5).join(', ')+(names.length>5?' ...':'');btn.disabled=false}else{sf.textContent='';btn.disabled=true}}");
         html.append("document.getElementById('fileInput').addEventListener('change',function(){activeInput='file';updateFileStatus()});");
         html.append("document.getElementById('folderInput').addEventListener('change',function(){activeInput='folder';updateFileStatus()});");
         html.append("const CONCURRENCY=4;");
-        html.append("async function startUpload(){if(uploadFiles.length===0)return;let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');let txt=document.getElementById('progressText');let overwrite=document.getElementById('overwriteCheck').checked;btn.disabled=true;btn.textContent='Uploading...';prog.style.display='block';let total=uploadFiles.length;let done=0;let success=0;let skipped=0;let failed=[];let queue=[...uploadFiles];async function worker(){while(queue.length>0){let file=queue.shift();if(!file)continue;let fname=file.webkitRelativePath||file.name;try{let fd=new FormData();fd.append('uploadedFile',file,fname);fd.append('originalPath',fname);if(overwrite)fd.append('overwrite','true');let res=await fetch(window.location.pathname,{method:'POST',body:fd});if(res.ok)success++;else{let t=await res.text();if(t.includes('exists')){skipped++;failed.push(fname+' (exists)')}else{failed.push(fname)}}}catch(e){failed.push(fname+' (error)')}done++;bar.style.width=(done/total*100)+'%';txt.textContent=done+' / '+total}}let workers=[];for(let i=0;i<CONCURRENCY;i++)workers.push(worker());await Promise.all(workers);btn.textContent='Upload';prog.style.display='none';bar.style.width='0%';let msg='Uploaded: '+success;if(skipped>0)msg+='\\nSkipped (exists): '+skipped;if(failed.length>skipped)msg+='\\nFailed: '+(failed.length-skipped);alert(msg);location.reload()}");
+        html.append("async function startUpload(){if(uploadFiles.length===0)return;let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');let pct=document.getElementById('progressPercent');let txt=document.getElementById('progressText');let spd=document.getElementById('progressSpeed');let overwrite=document.getElementById('overwriteCheck').checked;btn.disabled=true;btn.textContent='Uploading...';prog.style.display='block';let totalFiles=uploadFiles.length;let totalBytes=uploadFiles.reduce((a,f)=>a+f.size,0);let uploadedBytes=0;let uploadedFiles=0;let success=0;let skipped=0;let failed=[];let queue=[...uploadFiles];let startTime=Date.now();function updateProgress(){let p=totalBytes>0?(uploadedBytes/totalBytes*100):0;bar.style.width=p+'%';pct.textContent=Math.round(p)+'%';txt.textContent=uploadedFiles+' / '+totalFiles+' files ('+formatSize(uploadedBytes)+' / '+formatSize(totalBytes)+')';let elapsed=(Date.now()-startTime)/1000;let speed=elapsed>0?uploadedBytes/elapsed:0;spd.textContent='Speed: '+formatSize(speed)+'/s'}");
+        html.append("function uploadFile(file){return new Promise((resolve)=>{let fname=file.webkitRelativePath||file.name;let fd=new FormData();fd.append('uploadedFile',file,fname);fd.append('originalPath',fname);if(overwrite)fd.append('overwrite','true');let xhr=new XMLHttpRequest();xhr.upload.onprogress=function(e){if(e.lengthComputable){let prev=file._uploaded||0;file._uploaded=e.loaded;uploadedBytes+=e.loaded-prev;updateProgress()}};xhr.onload=function(){if(xhr.status>=200&&xhr.status<300){success++;resolve(true)}else{if(xhr.responseText.includes('exists')){skipped++;failed.push(fname+' (exists)')}else{failed.push(fname)}resolve(false)}};xhr.onerror=function(){failed.push(fname+' (error)');resolve(false)};xhr.open('POST',window.location.pathname);xhr.send(fd)})}");
+        html.append("async function worker(){while(queue.length>0){let file=queue.shift();if(!file)continue;await uploadFile(file);uploadedFiles++;updateProgress()}}");
+        html.append("let workers=[];for(let i=0;i<CONCURRENCY;i++)workers.push(worker());await Promise.all(workers);btn.textContent='Upload';btn.disabled=false;prog.style.display='none';bar.style.width='0%';let msg='Uploaded: '+success;if(skipped>0)msg+='\\nSkipped (exists): '+skipped;if(failed.length>skipped)msg+='\\nFailed: '+(failed.length-skipped);alert(msg);location.reload()}");
         html.append("document.querySelector('.file-list').addEventListener('contextmenu',function(e){if(e.target===this||e.target.classList.contains('empty')){showEmptyContextMenu(e)}});");
         html.append("initTheme();");
         html.append("</script>");
@@ -557,8 +585,11 @@ public class WebServer extends NanoHTTPD {
                     failCount++;
                 }
             }
-            String title = failCount == 0 ? "Delete Successful" : "Delete Completed with Errors";
-            return buildResultResponse(title, "Deleted: " + successCount + ", Failed: " + failCount, results.toString(), uri, failCount == 0);
+            if (failCount == 0) {
+                return redirectResponse(uri);
+            }
+            String title = "Delete Completed with Errors";
+            return buildResultResponse(title, "Deleted: " + successCount + ", Failed: " + failCount, results.toString(), uri, false);
         }
 
         if (params.containsKey("action") && "create_folder".equals(params.get("action").get(0))) {
@@ -578,7 +609,7 @@ public class WebServer extends NanoHTTPD {
                 if (eventListener != null) {
                     eventListener.onFolderCreated(folderName, getClientIp(session));
                 }
-                return buildResultResponse("Folder Created", "Successfully created folder:", folderName, uri, true);
+                return redirectResponse(uri);
             } else {
                 return buildErrorResponse("Create Folder Failed", "Could not create folder '" + folderName + "'. Check storage permissions.", uri);
             }
@@ -607,7 +638,7 @@ public class WebServer extends NanoHTTPD {
                 return buildErrorResponse("Rename Failed", "A file or folder named '" + newName + "' already exists.", uri);
             }
             if (toRename.renameTo(destination)) {
-                return buildResultResponse("Rename Successful", "Renamed:", selected + " -> " + newName, uri, true);
+                return redirectResponse(uri);
             } else {
                 return buildErrorResponse("Rename Failed", "Could not rename '" + selected + "'. File may be in use or permission denied.", uri);
             }
@@ -847,5 +878,141 @@ public class WebServer extends NanoHTTPD {
                 "<div class='redirect'>Redirecting in 3 seconds...</div>" +
                 "</div></body></html>";
         return newFixedLengthResponse(success ? Response.Status.OK : Response.Status.BAD_REQUEST, "text/html", html);
+    }
+
+    private Response redirectResponse(String uri) {
+        Response response = newFixedLengthResponse(Response.Status.REDIRECT_SEE_OTHER, "text/plain", "");
+        response.addHeader("Location", uri);
+        return response;
+    }
+
+    private Response serveTerminal() {
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>");
+        html.append("<title>AROMA Terminal</title>");
+        html.append("<style>");
+        html.append("*{box-sizing:border-box;margin:0;padding:0}");
+        html.append("body{font-family:'Courier New',monospace;background:#0d0d0d;color:#00ff00;min-height:100vh;display:flex;flex-direction:column}");
+        html.append(".header{background:#1a1a1a;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333}");
+        html.append(".header h1{font-size:1.2em;color:#00ff00}");
+        html.append(".back-btn{background:#333;color:#00ff00;padding:8px 16px;border-radius:4px;text-decoration:none;font-size:0.9em;border:1px solid #00ff00}");
+        html.append(".back-btn:hover{background:#00ff00;color:#000}");
+        html.append(".terminal{flex:1;padding:20px;overflow-y:auto;font-size:14px;line-height:1.6}");
+        html.append(".output{white-space:pre-wrap;word-break:break-all}");
+        html.append(".output .cmd{color:#00ff00}");
+        html.append(".output .result{color:#ccc}");
+        html.append(".output .error{color:#ff6b6b}");
+        html.append(".output .info{color:#4da6ff}");
+        html.append(".input-area{background:#1a1a1a;padding:15px 20px;border-top:1px solid #333;display:flex;gap:10px}");
+        html.append(".prompt{color:#00ff00;flex-shrink:0}");
+        html.append("#cmdInput{flex:1;background:transparent;border:none;color:#00ff00;font-family:inherit;font-size:14px;outline:none}");
+        html.append(".btn{background:#00ff00;color:#000;padding:8px 16px;border:none;border-radius:4px;cursor:pointer;font-family:inherit}");
+        html.append(".btn:hover{background:#00cc00}");
+        html.append(".btn:disabled{background:#333;color:#666;cursor:not-allowed}");
+        html.append("</style></head><body>");
+        html.append("<div class='header'><h1>AROMA Terminal</h1><a href='/' class='back-btn'>Back to Files</a></div>");
+        html.append("<div class='terminal' id='terminal'><div class='output' id='output'><span class='info'>Welcome to AROMA Terminal</span>\n<span class='info'>Type commands to execute on the Android device.</span>\n<span class='info'>Type 'help' for available commands.</span>\n\n</div></div>");
+        html.append("<div class='input-area'><span class='prompt'>$</span><input type='text' id='cmdInput' placeholder='Enter command...' autofocus><button class='btn' id='runBtn' onclick='runCommand()'>Run</button></div>");
+        html.append("<script>");
+        html.append("let history=[];let historyIndex=-1;");
+        html.append("const input=document.getElementById('cmdInput');const output=document.getElementById('output');const terminal=document.getElementById('terminal');const runBtn=document.getElementById('runBtn');");
+        html.append("input.addEventListener('keydown',function(e){if(e.key==='Enter'){runCommand()}else if(e.key==='ArrowUp'){e.preventDefault();if(historyIndex<history.length-1){historyIndex++;input.value=history[history.length-1-historyIndex]}}else if(e.key==='ArrowDown'){e.preventDefault();if(historyIndex>0){historyIndex--;input.value=history[history.length-1-historyIndex]}else{historyIndex=-1;input.value=''}}});");
+        html.append("async function runCommand(){let cmd=input.value.trim();if(!cmd)return;history.push(cmd);historyIndex=-1;input.value='';runBtn.disabled=true;output.innerHTML+='<span class=\"cmd\">$ '+escapeHtml(cmd)+'</span>\\n';if(cmd==='clear'){output.innerHTML='';runBtn.disabled=false;return}if(cmd==='help'){output.innerHTML+='<span class=\"info\">Available commands:\\n  ls, pwd, cd, cat, echo, whoami, id, df, free, ps, top -n 1, uname -a\\n  getprop (Android properties)\\n  pm list packages (list apps)\\n  dumpsys battery (battery info)\\n  clear - clear screen\\n  Any other shell command supported by the device</span>\\n\\n';runBtn.disabled=false;scrollToBottom();return}try{let res=await fetch('/api/exec',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd:cmd})});let data=await res.json();if(data.stdout){output.innerHTML+='<span class=\"result\">'+escapeHtml(data.stdout)+'</span>'}if(data.stderr){output.innerHTML+='<span class=\"error\">'+escapeHtml(data.stderr)+'</span>'}if(data.error){output.innerHTML+='<span class=\"error\">Error: '+escapeHtml(data.error)+'</span>\\n'}}catch(e){output.innerHTML+='<span class=\"error\">Request failed: '+escapeHtml(e.message)+'</span>\\n'}output.innerHTML+='\\n';runBtn.disabled=false;scrollToBottom()}");
+        html.append("function scrollToBottom(){terminal.scrollTop=terminal.scrollHeight}");
+        html.append("function escapeHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}");
+        html.append("</script>");
+        html.append("</body></html>");
+        return newFixedLengthResponse(Response.Status.OK, "text/html", html.toString());
+    }
+
+    private Response handleExec(IHTTPSession session) {
+        try {
+            Map<String, String> files = new HashMap<>();
+            session.parseBody(files);
+            String body = files.get("postData");
+            if (body == null || body.isEmpty()) {
+                return jsonResponse("{\"error\":\"No command provided\"}");
+            }
+            
+            String cmd = "";
+            if (body.contains("\"cmd\"")) {
+                int start = body.indexOf("\"cmd\"");
+                int colonPos = body.indexOf(":", start);
+                int valueStart = body.indexOf("\"", colonPos + 1) + 1;
+                int valueEnd = body.indexOf("\"", valueStart);
+                if (valueStart > 0 && valueEnd > valueStart) {
+                    cmd = body.substring(valueStart, valueEnd);
+                }
+            }
+            
+            if (cmd.isEmpty()) {
+                return jsonResponse("{\"error\":\"Invalid command format\"}");
+            }
+            
+            String[] dangerousCommands = {"rm -rf /", "mkfs", "dd if=", "> /dev/", "reboot", "shutdown", "halt", "poweroff"};
+            for (String dangerous : dangerousCommands) {
+                if (cmd.toLowerCase().contains(dangerous.toLowerCase())) {
+                    return jsonResponse("{\"error\":\"Command blocked for safety\"}");
+                }
+            }
+            
+            ProcessBuilder pb = new ProcessBuilder("sh", "-c", cmd);
+            pb.redirectErrorStream(false);
+            Process process = pb.start();
+            
+            StringBuilder stdout = new StringBuilder();
+            StringBuilder stderr = new StringBuilder();
+            
+            Thread outThread = new Thread(() -> {
+                try {
+                    int ch;
+                    while ((ch = process.getInputStream().read()) != -1) {
+                        stdout.append((char) ch);
+                    }
+                } catch (IOException ignored) {}
+            });
+            
+            Thread errThread = new Thread(() -> {
+                try {
+                    int ch;
+                    while ((ch = process.getErrorStream().read()) != -1) {
+                        stderr.append((char) ch);
+                    }
+                } catch (IOException ignored) {}
+            });
+            
+            outThread.start();
+            errThread.start();
+            
+            boolean finished = process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+                return jsonResponse("{\"error\":\"Command timed out (30s limit)\"}");
+            }
+            
+            outThread.join(1000);
+            errThread.join(1000);
+            
+            String result = "{\"stdout\":\"" + escapeJson(stdout.toString()) + "\",\"stderr\":\"" + escapeJson(stderr.toString()) + "\",\"exitCode\":" + process.exitValue() + "}";
+            return jsonResponse(result);
+            
+        } catch (Exception e) {
+            return jsonResponse("{\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
+        }
+    }
+    
+    private Response jsonResponse(String json) {
+        Response response = newFixedLengthResponse(Response.Status.OK, "application/json", json);
+        response.addHeader("Access-Control-Allow-Origin", "*");
+        return response;
+    }
+    
+    private String escapeJson(String text) {
+        if (text == null) return "";
+        return text.replace("\\", "\\\\")
+                   .replace("\"", "\\\"")
+                   .replace("\n", "\\n")
+                   .replace("\r", "\\r")
+                   .replace("\t", "\\t");
     }
 }
