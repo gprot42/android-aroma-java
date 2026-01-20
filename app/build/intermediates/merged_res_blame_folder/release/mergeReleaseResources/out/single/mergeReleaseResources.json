@@ -1,54 +1,78 @@
 [
     {
-        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-release-25:/mipmap-hdpi_ic_launcher.png.flat",
-        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-26:/mipmap-hdpi/ic_launcher.png"
+        "merged": "com.example.aroma.app-release-25:/drawable_status_dot_offline.xml.flat",
+        "source": "com.example.aroma.app-main-26:/drawable/status_dot_offline.xml"
     },
     {
-        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-release-25:/mipmap-xxhdpi_ic_launcher.png.flat",
-        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-26:/mipmap-xxhdpi/ic_launcher.png"
+        "merged": "com.example.aroma.app-release-25:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.example.aroma.app-main-26:/mipmap-xxxhdpi/ic_launcher.png"
     },
     {
-        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-release-25:/mipmap-xxxhdpi_splash.png.flat",
-        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-26:/mipmap-xxxhdpi/splash.png"
+        "merged": "com.example.aroma.app-release-25:/drawable_splash_background.xml.flat",
+        "source": "com.example.aroma.app-main-26:/drawable/splash_background.xml"
     },
     {
-        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-release-25:/mipmap-xhdpi_ic_launcher.png.flat",
-        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-26:/mipmap-xhdpi/ic_launcher.png"
+        "merged": "com.example.aroma.app-release-25:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.example.aroma.app-main-26:/mipmap-mdpi/ic_launcher.png"
     },
     {
-        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-release-25:/mipmap-xxxhdpi_ic_launcher.png.flat",
-        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-26:/mipmap-xxxhdpi/ic_launcher.png"
+        "merged": "com.example.aroma.app-release-25:/mipmap-xhdpi_splash.png.flat",
+        "source": "com.example.aroma.app-main-26:/mipmap-xhdpi/splash.png"
     },
     {
-        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-release-25:/layout_activity_main.xml.flat",
-        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-26:/layout/activity_main.xml"
+        "merged": "com.example.aroma.app-release-25:/drawable_status_dot_online.xml.flat",
+        "source": "com.example.aroma.app-main-26:/drawable/status_dot_online.xml"
     },
     {
-        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-release-25:/mipmap-xhdpi_splash.png.flat",
-        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-26:/mipmap-xhdpi/splash.png"
+        "merged": "com.example.aroma.app-release-25:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.example.aroma.app-main-26:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.aroma.app-release-25:/drawable_card_background.xml.flat",
+        "source": "com.example.aroma.app-main-26:/drawable/card_background.xml"
     },
     {
         "merged": "com.example.aroma.app-release-25:/drawable_splash.png.flat",
         "source": "com.example.aroma.app-main-26:/drawable/splash.png"
     },
     {
-        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-release-25:/mipmap-mdpi_ic_launcher.png.flat",
-        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-26:/mipmap-mdpi/ic_launcher.png"
+        "merged": "com.example.aroma.app-release-25:/mipmap-hdpi_splash.png.flat",
+        "source": "com.example.aroma.app-main-26:/mipmap-hdpi/splash.png"
     },
     {
-        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-release-25:/mipmap-hdpi_splash.png.flat",
-        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-26:/mipmap-hdpi/splash.png"
+        "merged": "com.example.aroma.app-release-25:/mipmap-xxxhdpi_splash.png.flat",
+        "source": "com.example.aroma.app-main-26:/mipmap-xxxhdpi/splash.png"
     },
     {
-        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-release-25:/mipmap-xxhdpi_splash.png.flat",
-        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-26:/mipmap-xxhdpi/splash.png"
+        "merged": "com.example.aroma.app-release-25:/mipmap-mdpi_splash.png.flat",
+        "source": "com.example.aroma.app-main-26:/mipmap-mdpi/splash.png"
     },
     {
-        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-release-25:/drawable_splash_background.xml.flat",
-        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-26:/drawable/splash_background.xml"
+        "merged": "com.example.aroma.app-release-25:/drawable_spinner_background.xml.flat",
+        "source": "com.example.aroma.app-main-26:/drawable/spinner_background.xml"
     },
     {
-        "merged": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-release-25:/mipmap-mdpi_splash.png.flat",
-        "source": "/Users/darrenevans/.gradle/daemon/8.14/com.example.aroma.app-main-26:/mipmap-mdpi/splash.png"
+        "merged": "com.example.aroma.app-release-25:/layout_activity_settings.xml.flat",
+        "source": "com.example.aroma.app-main-26:/layout/activity_settings.xml"
+    },
+    {
+        "merged": "com.example.aroma.app-release-25:/layout_activity_main.xml.flat",
+        "source": "com.example.aroma.app-main-26:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.example.aroma.app-release-25:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.example.aroma.app-main-26:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.aroma.app-release-25:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.example.aroma.app-main-26:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.aroma.app-release-25:/drawable_edit_text_background.xml.flat",
+        "source": "com.example.aroma.app-main-26:/drawable/edit_text_background.xml"
+    },
+    {
+        "merged": "com.example.aroma.app-release-25:/mipmap-xxhdpi_splash.png.flat",
+        "source": "com.example.aroma.app-main-26:/mipmap-xxhdpi/splash.png"
     }
 ]

@@ -69,6 +69,7 @@
 -keep class j$.util.Objects {
   public static boolean equals(java.lang.Object, java.lang.Object);
   public static int hash(java.lang.Object[]);
+  public static int hashCode(java.lang.Object);
   public static boolean isNull(java.lang.Object);
   public static boolean nonNull(java.lang.Object);
   public static java.lang.Object requireNonNull(java.lang.Object);

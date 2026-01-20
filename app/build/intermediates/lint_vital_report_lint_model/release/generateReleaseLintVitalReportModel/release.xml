@@ -27,6 +27,6 @@
       applicationId="com.example.aroma"
       generatedSourceFolders="build/generated/ap_generated_sources/release/out"
       generatedResourceFolders="build/generated/res/resValues/release"
-      desugaredMethodsFiles="/Users/darrenevans/.gradle/caches/8.14/transforms/95962b790e23e797db72a924bb8de3c5/transformed/desugar_jdk_libs_configuration-2.0.4-desugar-lint.txt:/Users/darrenevans/.gradle/caches/8.14/transforms/e93291c9a8f35fd24e5e9f385e9d1a7c/transformed/D8BackportedDesugaredMethods.txt">
+      desugaredMethodsFiles="/Users/aicoder/.gradle/caches/8.14/transforms/95962b790e23e797db72a924bb8de3c5/transformed/desugar_jdk_libs_configuration-2.0.4-desugar-lint.txt:/Users/aicoder/.gradle/caches/8.14/transforms/e93291c9a8f35fd24e5e9f385e9d1a7c/transformed/D8BackportedDesugaredMethods.txt">
   </artifact>
 </variant>
