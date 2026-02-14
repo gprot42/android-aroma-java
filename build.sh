@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.0.6"
+VERSION="0.0.7"
 OUTPUT_DIR="/Users/aicoder/src/grapheneos-shizuku/apks"
 
 show_help() {
