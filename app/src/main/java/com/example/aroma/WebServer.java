@@ -355,7 +355,7 @@ public class WebServer extends NanoHTTPD {
         html.append("<div class='modal-content'>");
         html.append("<button class='close-btn' onclick='hideModal(\"aboutModal\")'>&times;</button>");
         html.append("<h2>AROMA File Manager</h2>");
-        html.append("<p>Version 0.0.3 - Android Remote Online Management App</p>");
+        html.append("<p>Version 0.0.7 - Android Remote Online Management App</p>");
         
         html.append("<h3>Quick Start</h3>");
         html.append("<ul>");
