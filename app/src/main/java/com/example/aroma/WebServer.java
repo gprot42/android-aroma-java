@@ -919,6 +919,7 @@ public class WebServer extends NanoHTTPD {
                 File file = new File(currentDir, name);
                 if (file.exists() && file.isFile()) {
                     java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(name);
+                    entry.setTime(file.lastModified());
                     zos.putNextEntry(entry);
                     FileInputStream fis = new FileInputStream(file);
                     byte[] buffer = new byte[8192];
@@ -968,6 +969,7 @@ public class WebServer extends NanoHTTPD {
                 addFolderToZip(zos, file, entryPath);
             } else {
                 java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(entryPath);
+                entry.setTime(file.lastModified());
                 zos.putNextEntry(entry);
                 FileInputStream fis = new FileInputStream(file);
                 byte[] buffer = new byte[8192];
