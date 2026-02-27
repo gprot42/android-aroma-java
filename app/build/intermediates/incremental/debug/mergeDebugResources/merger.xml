@@ -2724,6 +2724,7 @@
         <item>Pictures</item>
         <item>Music</item>
         <item>Movies</item>
+        <item>Photos (DCIM)</item>
     </string-array><string name="about_section">About</string><string name="app_version">AROMA v0.0.3</string><string name="app_description">Android Remote Online Management App - Access your device files remotely via web browser.</string></file><file name="splash" path="/Users/aicoder/src/app-aroma-java/app/src/main/res/mipmap-xhdpi/splash.png" qualifiers="xhdpi-v4" type="mipmap"/><file name="ic_launcher" path="/Users/aicoder/src/app-aroma-java/app/src/main/res/mipmap-xhdpi/ic_launcher.png" qualifiers="xhdpi-v4" type="mipmap"/><file path="/Users/aicoder/src/app-aroma-java/app/src/main/res/values-v31/themes.xml" qualifiers="v31"><style name="Theme.Aroma" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowSplashScreenBackground">#FFFFFF</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>

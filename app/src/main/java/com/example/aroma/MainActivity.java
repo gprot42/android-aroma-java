@@ -393,6 +393,9 @@ public class MainActivity extends Activity implements ServerEventListener {
             case CredentialsManager.FOLDER_MOVIES:
                 dirType = Environment.DIRECTORY_MOVIES;
                 break;
+            case CredentialsManager.FOLDER_DCIM:
+                dirType = Environment.DIRECTORY_DCIM;
+                break;
             default:
                 dirType = Environment.DIRECTORY_DOWNLOADS;
         }

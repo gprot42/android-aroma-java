@@ -22,6 +22,7 @@ public class CredentialsManager {
     public static final int FOLDER_PICTURES = 2;
     public static final int FOLDER_MUSIC = 3;
     public static final int FOLDER_MOVIES = 4;
+    public static final int FOLDER_DCIM = 5;
     
     public static final int THEME_DARK = 0;
     public static final int THEME_LIGHT = 1;

@@ -57,6 +57,7 @@
         <item>Pictures</item>
         <item>Music</item>
         <item>Movies</item>
+        <item>Photos (DCIM)</item>
     </string-array>
     
     <!-- About -->
