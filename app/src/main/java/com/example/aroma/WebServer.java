@@ -936,13 +936,19 @@ public class WebServer extends NanoHTTPD {
             zos.close();
             
             String zipName = "download_" + System.currentTimeMillis() + ".zip";
-            FileInputStream zipStream = new FileInputStream(tempZip);
+            final File tempFile = tempZip;
+            FileInputStream zipStream = new FileInputStream(tempZip) {
+                @Override
+                public void close() throws IOException {
+                    super.close();
+                    tempFile.delete();
+                    Log.d("AROMA", "Temp ZIP deleted: " + tempFile.getName());
+                }
+            };
             long zipSize = tempZip.length();
             
             Response response = newFixedLengthResponse(Response.Status.OK, "application/zip", zipStream, zipSize);
             response.addHeader("Content-Disposition", "attachment; filename=\"" + zipName + "\"");
-            
-            tempZip.deleteOnExit();
             
             return response;
             
