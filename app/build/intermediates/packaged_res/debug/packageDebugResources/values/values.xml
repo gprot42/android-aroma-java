@@ -31,7 +31,7 @@
     <string name="about_section">About</string>
     <string name="app_description">Android Remote Online Management App - Access your device files remotely via web browser.</string>
     <string name="app_name">AROMA</string>
-    <string name="app_version">AROMA v0.0.3</string>
+    <string name="app_version">AROMA v0.0.7</string>
     <string name="appearance_section">Appearance</string>
     <string name="auto_start_server">Auto-start server on app launch</string>
     <string name="credentials_empty_error">Username and password cannot be empty</string>

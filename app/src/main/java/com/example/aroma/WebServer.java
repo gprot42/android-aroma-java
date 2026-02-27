@@ -6,6 +6,8 @@ import android.util.Log;
 
 import fi.iki.elonen.NanoHTTPD;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -255,6 +257,7 @@ public class WebServer extends NanoHTTPD {
         html.append("</div>");
         html.append("<div class='actions-bar'>");
         html.append("<button type='submit' class='btn btn-danger'>Delete Selected</button>");
+        html.append("<button type='button' class='btn btn-success' onclick='downloadSelected()'>Download Selected</button>");
         html.append("<button type='button' class='btn btn-secondary' onclick='selectAll()'>Select All</button>");
         html.append("<button type='button' class='btn btn-secondary' onclick='selectNone()'>Select None</button>");
         html.append("</div>");
@@ -401,6 +404,7 @@ public class WebServer extends NanoHTTPD {
         html.append("function createFolderFromMenu(){showModal('createFolderModal');document.getElementById('newFolderName').focus()}");
         html.append("function selectAll(){document.querySelectorAll('input[name=selected]').forEach(c=>{c.checked=true});updateFileInfoPanel()}");
         html.append("function selectNone(){document.querySelectorAll('input[name=selected]').forEach(c=>{c.checked=false});updateFileInfoPanel()}");
+        html.append("function downloadSelected(){let checked=document.querySelectorAll('input[name=selected]:checked');if(checked.length===0){alert('No files selected');return}let files=Array.from(checked).map(c=>c.value);let form=document.createElement('form');form.method='POST';form.action=window.location.pathname+'?downloadzip';files.forEach(f=>{let input=document.createElement('input');input.type='hidden';input.name='selected';input.value=f;form.appendChild(input)});document.body.appendChild(form);form.submit()}");
         html.append("function updateFileInfoPanel(){let checked=document.querySelectorAll('input[name=selected]:checked');let panel=document.getElementById('fileInfoPanel');let content=document.getElementById('fileInfoContent');if(checked.length===0){panel.style.display='none';return}panel.style.display='block';if(checked.length===1){let name=checked[0].value;let item=checked[0].closest('.file-item');let meta=item.querySelector('.file-meta');let size=meta?meta.textContent:'';content.innerHTML='<strong>'+name+'</strong><br>'+size}else{let totalSize=0;checked.forEach(c=>{let d=fileData[c.value];if(d&&d.size)totalSize+=d.size});content.innerHTML=checked.length+' items selected<br>Total: '+formatSize(totalSize)}}");
         html.append("function formatSize(b){if(b<=0)return'0 B';let u=['B','KB','MB','GB','TB'];let i=Math.floor(Math.log(b)/Math.log(1024));return(b/Math.pow(1024,i)).toFixed(1)+' '+u[i]}");
         html.append("document.querySelectorAll('input[name=selected]').forEach(c=>c.addEventListener('change',updateFileInfoPanel));");
@@ -547,6 +551,12 @@ public class WebServer extends NanoHTTPD {
 
     private Response handlePost(IHTTPSession session, File currentDir, String uri) {
         Log.d("AROMA", "POST request received for URI: " + uri);
+        
+        String queryString = session.getQueryParameterString();
+        if ("downloadzip".equals(queryString)) {
+            return handleDownloadZip(session, currentDir);
+        }
+        
         Map<String, String> files = new HashMap<>();
         try {
             session.parseBody(files);
@@ -889,6 +899,76 @@ public class WebServer extends NanoHTTPD {
         Response response = newFixedLengthResponse(Response.Status.REDIRECT_SEE_OTHER, "text/plain", "");
         response.addHeader("Location", uri);
         return response;
+    }
+
+    private Response handleDownloadZip(IHTTPSession session, File currentDir) {
+        try {
+            Map<String, String> files = new HashMap<>();
+            session.parseBody(files);
+            Map<String, List<String>> params = session.getParameters();
+            List<String> selected = params.get("selected");
+            
+            if (selected == null || selected.isEmpty()) {
+                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "No files selected");
+            }
+            
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos);
+            
+            for (String name : selected) {
+                File file = new File(currentDir, name);
+                if (file.exists() && file.isFile()) {
+                    java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(name);
+                    zos.putNextEntry(entry);
+                    FileInputStream fis = new FileInputStream(file);
+                    byte[] buffer = new byte[8192];
+                    int len;
+                    while ((len = fis.read(buffer)) > 0) {
+                        zos.write(buffer, 0, len);
+                    }
+                    fis.close();
+                    zos.closeEntry();
+                } else if (file.exists() && file.isDirectory()) {
+                    addFolderToZip(zos, file, name);
+                }
+            }
+            
+            zos.close();
+            byte[] zipData = baos.toByteArray();
+            
+            String zipName = "download_" + System.currentTimeMillis() + ".zip";
+            Response response = newFixedLengthResponse(Response.Status.OK, "application/zip", 
+                new ByteArrayInputStream(zipData), zipData.length);
+            response.addHeader("Content-Disposition", "attachment; filename=\"" + zipName + "\"");
+            return response;
+            
+        } catch (Exception e) {
+            Log.e("AROMA", "ZIP creation failed: " + e.getMessage());
+            return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Failed to create ZIP: " + e.getMessage());
+        }
+    }
+    
+    private void addFolderToZip(java.util.zip.ZipOutputStream zos, File folder, String parentPath) throws IOException {
+        File[] files = folder.listFiles();
+        if (files == null) return;
+        
+        for (File file : files) {
+            String entryPath = parentPath + "/" + file.getName();
+            if (file.isDirectory()) {
+                addFolderToZip(zos, file, entryPath);
+            } else {
+                java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(entryPath);
+                zos.putNextEntry(entry);
+                FileInputStream fis = new FileInputStream(file);
+                byte[] buffer = new byte[8192];
+                int len;
+                while ((len = fis.read(buffer)) > 0) {
+                    zos.write(buffer, 0, len);
+                }
+                fis.close();
+                zos.closeEntry();
+            }
+        }
     }
 
     private Response serveTerminal() {
