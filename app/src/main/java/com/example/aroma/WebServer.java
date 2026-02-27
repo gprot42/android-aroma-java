@@ -912,8 +912,8 @@ public class WebServer extends NanoHTTPD {
                 return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "No files selected");
             }
             
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos);
+            File tempZip = File.createTempFile("aroma_download_", ".zip", context.getCacheDir());
+            java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(new FileOutputStream(tempZip));
             
             for (String name : selected) {
                 File file = new File(currentDir, name);
@@ -934,12 +934,16 @@ public class WebServer extends NanoHTTPD {
             }
             
             zos.close();
-            byte[] zipData = baos.toByteArray();
             
             String zipName = "download_" + System.currentTimeMillis() + ".zip";
-            Response response = newFixedLengthResponse(Response.Status.OK, "application/zip", 
-                new ByteArrayInputStream(zipData), zipData.length);
+            FileInputStream zipStream = new FileInputStream(tempZip);
+            long zipSize = tempZip.length();
+            
+            Response response = newFixedLengthResponse(Response.Status.OK, "application/zip", zipStream, zipSize);
             response.addHeader("Content-Disposition", "attachment; filename=\"" + zipName + "\"");
+            
+            tempZip.deleteOnExit();
+            
             return response;
             
         } catch (Exception e) {
