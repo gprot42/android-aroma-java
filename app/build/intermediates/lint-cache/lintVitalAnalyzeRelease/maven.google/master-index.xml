@@ -39,6 +39,7 @@
   <androidx.compose.material/>
   <androidx.compose.material3/>
   <androidx.compose.material3.adaptive/>
+  <androidx.compose.remote/>
   <androidx.compose.runtime/>
   <androidx.compose.ui/>
   <androidx.concurrent/>
@@ -66,6 +67,7 @@
   <androidx.games/>
   <androidx.gaming/>
   <androidx.glance/>
+  <androidx.glance.wear/>
   <androidx.gradle/>
   <androidx.graphics/>
   <androidx.gridlayout/>
@@ -130,6 +132,7 @@
   <androidx.test.janktesthelper/>
   <androidx.test.services/>
   <androidx.test.uiautomator/>
+  <androidx.text/>
   <androidx.textclassifier/>
   <androidx.tracing/>
   <androidx.transition/>
@@ -146,6 +149,7 @@
   <androidx.wear.tiles/>
   <androidx.wear.watchface/>
   <androidx.wear.watchfacepush/>
+  <androidx.webgpu/>
   <androidx.webkit/>
   <androidx.window/>
   <androidx.window.extensions.core/>
@@ -153,6 +157,8 @@
   <androidx.xr.arcore/>
   <androidx.xr.compose/>
   <androidx.xr.compose.material3/>
+  <androidx.xr.glimmer/>
+  <androidx.xr.projected/>
   <androidx.xr.runtime/>
   <androidx.xr.scenecore/>
   <com.android/>
@@ -162,6 +168,7 @@
   <com.android.asset-pack/>
   <com.android.asset-pack-bundle/>
   <com.android.billingclient/>
+  <com.android.built-in-kotlin/>
   <com.android.car.setupwizardlib/>
   <com.android.car.ui/>
   <com.android.compose.screenshot/>
@@ -220,6 +227,7 @@
   <com.android.tools.pixelprobe/>
   <com.android.tools.screenshot/>
   <com.android.tools.smali/>
+  <com.android.tools.studio.leakcanary/>
   <com.android.tools.utp/>
   <com.android.volley/>
   <com.crashlytics.sdk.android/>
@@ -229,6 +237,7 @@
   <com.google.ai.client.generativeai/>
   <com.google.ai.edge.aicore/>
   <com.google.ai.edge.litert/>
+  <com.google.ai.edge.litertlm/>
   <com.google.ai.edge.localagents/>
   <com.google.ambient.crossdevice/>
   <com.google.android.ads/>
