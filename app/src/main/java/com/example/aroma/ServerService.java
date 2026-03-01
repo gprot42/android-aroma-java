@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Environment;
@@ -128,8 +129,8 @@ public class ServerService extends Service {
             server.start();
         } catch (IOException e) {
             String msg = e.getMessage();
-            if (msg != null && msg.contains("Address already in use")) {
-                throw new IOException("Port " + currentPort + " is already in use. Try a different port in Settings.");
+            if (msg != null && (msg.contains("Address already in use") || msg.contains("Failed to bind"))) {
+                throw new IOException("Port " + currentPort + " is already in use or unavailable. Try a different port in Settings.");
             }
             throw new IOException("Failed to start HTTP server: " + msg);
         }
@@ -251,15 +252,37 @@ public class ServerService extends Service {
 
     private String getLocalIpAddress() {
         try {
+            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+            if (wm != null) {
+                int ip = wm.getConnectionInfo().getIpAddress();
+                if (ip != 0) {
+                    return String.format("%d.%d.%d.%d",
+                            (ip & 0xff), (ip >> 8 & 0xff),
+                            (ip >> 16 & 0xff), (ip >> 24 & 0xff));
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "WifiManager IP lookup failed: " + e.getMessage());
+        }
+
+        try {
+            String fallbackIp = null;
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
                 NetworkInterface intf = en.nextElement();
+                if (!intf.isUp() || intf.isLoopback()) continue;
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
                     InetAddress inetAddress = enumIpAddr.nextElement();
                     if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
-                        return inetAddress.getHostAddress();
+                        if (intf.getName().startsWith("wlan")) {
+                            return inetAddress.getHostAddress();
+                        }
+                        if (fallbackIp == null) {
+                            fallbackIp = inetAddress.getHostAddress();
+                        }
                     }
                 }
             }
+            if (fallbackIp != null) return fallbackIp;
         } catch (Exception ex) {
             Log.e(TAG, "IP lookup failed: " + ex.getMessage());
         }

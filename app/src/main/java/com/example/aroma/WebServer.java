@@ -28,11 +28,35 @@ public class WebServer extends NanoHTTPD {
     private ServerEventListener eventListener;
 
     public WebServer(int port, File wwwRoot, Context ctx, String username, String password) {
-        super(port);
+        super("0.0.0.0", port);
         this.rootDir = wwwRoot;
         this.context = ctx;
         this.username = username;
         this.password = password;
+    }
+
+    @Override
+    public void start() throws IOException {
+        start(SOCKET_READ_TIMEOUT, false);
+        long deadline = System.currentTimeMillis() + 3000;
+        while (System.currentTimeMillis() < deadline) {
+            if (getListeningPort() > 0) {
+                return;
+            }
+            if (!isAlive()) {
+                break;
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        if (getListeningPort() <= 0) {
+            stop();
+            throw new IOException("Failed to bind to port");
+        }
     }
 
     public void setEventListener(ServerEventListener listener) {
