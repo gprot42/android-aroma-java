@@ -7,12 +7,12 @@
         message="">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*manifest*0}"
-            line="7"
+            line="8"
             column="36"
-            startOffset="367"
-            endLine="7"
+            startOffset="418"
+            endLine="8"
             endColumn="76"
-            endOffset="407"/>
+            endOffset="458"/>
         <map>
             <entry
                 name="maxSdkVersion"
@@ -29,12 +29,12 @@
         message="">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*manifest*0}"
-            line="8"
+            line="9"
             column="36"
-            startOffset="474"
-            endLine="8"
+            startOffset="525"
+            endLine="9"
             endColumn="77"
-            endOffset="515"/>
+            endOffset="566"/>
         <map>
             <entry
                 name="maxSdkVersion"
@@ -42,6 +42,72 @@
             <entry
                 name="read"
                 boolean="false"/>
+        </map>
+    </incident>
+
+    <incident
+        id="NewApi"
+        severity="error"
+        message="">
+        <fix-data minSdk="21-∞" requiresApi="26-∞"/>
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
+            line="1108"
+            column="40"
+            startOffset="75828"
+            endLine="1108"
+            endColumn="47"
+            endOffset="75835"/>
+        <map>
+            <entry
+                name="desc"
+                string="(JLjava.util.concurrent.TimeUnit;)"/>
+            <entry
+                name="message"
+                string="Call requires API level 26 (current min is %1$s): `java.lang.Process#waitFor`"/>
+            <api-levels id="minSdk"
+                value="21-∞"/>
+            <entry
+                name="name"
+                string="waitFor"/>
+            <entry
+                name="owner"
+                string="java.lang.Process"/>
+            <api-levels id="requiresApi"
+                value="26-∞"/>
+        </map>
+    </incident>
+
+    <incident
+        id="NewApi"
+        severity="error"
+        message="">
+        <fix-data minSdk="21-∞" requiresApi="26-∞"/>
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
+            line="1110"
+            column="25"
+            startOffset="75933"
+            endLine="1110"
+            endColumn="40"
+            endOffset="75948"/>
+        <map>
+            <entry
+                name="desc"
+                string="()"/>
+            <entry
+                name="message"
+                string="Call requires API level 26 (current min is %1$s): `java.lang.Process#destroyForcibly`"/>
+            <api-levels id="minSdk"
+                value="21-∞"/>
+            <entry
+                name="name"
+                string="destroyForcibly"/>
+            <entry
+                name="owner"
+                string="java.lang.Process"/>
+            <api-levels id="requiresApi"
+                value="26-∞"/>
         </map>
     </incident>
 

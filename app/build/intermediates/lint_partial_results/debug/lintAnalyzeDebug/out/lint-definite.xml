@@ -4,15 +4,113 @@
     <incident
         id="DefaultLocale"
         severity="warning"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/ServerService.java"
+            line="259"
+            column="28"
+            startOffset="9724"
+            endLine="261"
+            endColumn="66"
+            endOffset="9877"/>
+    </incident>
+
+    <incident
+        id="DefaultLocale"
+        severity="warning"
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
-            line="35"
+            line="77"
             column="35"
-            startOffset="982"
-            endLine="35"
+            startOffset="2268"
+            endLine="77"
             endColumn="46"
-            endOffset="993"/>
+            endOffset="2279"/>
+    </incident>
+
+    <incident
+        id="DefaultLocale"
+        severity="warning"
+        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
+            line="251"
+            column="45"
+            startOffset="14257"
+            endLine="251"
+            endColumn="56"
+            endOffset="14268"/>
+    </incident>
+
+    <incident
+        id="DefaultLocale"
+        severity="warning"
+        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
+            line="464"
+            column="50"
+            startOffset="36831"
+            endLine="464"
+            endColumn="61"
+            endOffset="36842"/>
+    </incident>
+
+    <incident
+        id="DefaultLocale"
+        severity="warning"
+        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
+            line="831"
+            column="32"
+            startOffset="58754"
+            endLine="831"
+            endColumn="43"
+            endOffset="58765"/>
+    </incident>
+
+    <incident
+        id="DefaultLocale"
+        severity="warning"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
+            line="859"
+            column="16"
+            startOffset="60254"
+            endLine="859"
+            endColumn="96"
+            endOffset="60334"/>
+    </incident>
+
+    <incident
+        id="DefaultLocale"
+        severity="warning"
+        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
+            line="1075"
+            column="25"
+            startOffset="74589"
+            endLine="1075"
+            endColumn="36"
+            endOffset="74600"/>
+    </incident>
+
+    <incident
+        id="DefaultLocale"
+        severity="warning"
+        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
+            line="1075"
+            column="58"
+            startOffset="74622"
+            endLine="1075"
+            endColumn="69"
+            endOffset="74633"/>
     </incident>
 
     <incident
@@ -26,12 +124,12 @@
             priority="0"/>
         <location
             file="${:app*projectDir}/build.gradle"
-            line="11"
+            line="16"
             column="9"
-            startOffset="210"
-            endLine="11"
+            startOffset="476"
+            endLine="16"
             endColumn="28"
-            endOffset="229"/>
+            endOffset="495"/>
     </incident>
 
     <incident
@@ -44,7 +142,7 @@
             replacement="8.14.3"
             priority="0"/>
         <location
-            file="$HOME/src/aroma/gradle/wrapper/gradle-wrapper.properties"
+            file="$HOME/src/app-aroma-java/gradle/wrapper/gradle-wrapper.properties"
             line="3"
             column="17"
             startOffset="81"
@@ -64,12 +162,12 @@
             priority="0"/>
         <location
             file="${:app*projectDir}/build.gradle"
-            line="7"
+            line="12"
             column="5"
-            startOffset="94"
-            endLine="7"
+            startOffset="360"
+            endLine="12"
             endColumn="25"
-            endOffset="114"/>
+            endOffset="380"/>
     </incident>
 
     <incident
@@ -84,12 +182,12 @@
             priority="0"/>
         <location
             file="${:app*projectDir}/build.gradle"
-            line="32"
+            line="41"
             column="20"
-            startOffset="838"
-            endLine="32"
+            startOffset="1251"
+            endLine="41"
             endColumn="56"
-            endOffset="874"/>
+            endOffset="1287"/>
     </incident>
 
     <incident
@@ -104,12 +202,12 @@
             priority="0"/>
         <location
             file="${:app*projectDir}/build.gradle"
-            line="35"
+            line="44"
             column="20"
-            startOffset="1006"
-            endLine="35"
+            startOffset="1419"
+            endLine="44"
             endColumn="62"
-            endOffset="1048"/>
+            endOffset="1461"/>
     </incident>
 
     <incident
@@ -124,26 +222,60 @@
             priority="0"/>
         <location
             file="${:app*projectDir}/build.gradle"
-            line="53"
+            line="63"
             column="27"
-            startOffset="1773"
-            endLine="53"
+            startOffset="2237"
+            endLine="63"
             endColumn="69"
-            endOffset="1815"/>
+            endOffset="2279"/>
+    </incident>
+
+    <incident
+        id="NewerVersionAvailable"
+        severity="warning"
+        message="A newer version of com.google.zxing:core than 3.5.2 is available: 3.5.4">
+        <fix-replace
+            description="Change to 3.5.4"
+            family="Update versions"
+            oldString="3.5.2"
+            replacement="3.5.4"
+            priority="0"/>
+        <location
+            file="${:app*projectDir}/build.gradle"
+            line="45"
+            column="20"
+            startOffset="1481"
+            endLine="45"
+            endColumn="49"
+            endOffset="1510"/>
     </incident>
 
     <incident
         id="Overdraw"
         severity="warning"
-        message="Possible overdraw: Root element paints background `#ADD8E6` with a theme that also paints a background (inferred theme is `@style/Theme.Aroma`)">
+        message="Possible overdraw: Root element paints background `#1a1a2e` with a theme that also paints a background (inferred theme is `@style/Theme_Aroma_Dark`)">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
-            line="7"
+            line="6"
             column="5"
-            startOffset="259"
-            endLine="7"
+            startOffset="232"
+            endLine="6"
             endColumn="33"
-            endOffset="287"/>
+            endOffset="260"/>
+    </incident>
+
+    <incident
+        id="Overdraw"
+        severity="warning"
+        message="Possible overdraw: Root element paints background `#1a1a2e` with a theme that also paints a background (inferred theme is `@style/Theme_Aroma_Dark`)">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_settings.xml"
+            line="6"
+            column="5"
+            startOffset="233"
+            endLine="6"
+            endColumn="33"
+            endOffset="261"/>
     </incident>
 
     <incident
@@ -157,12 +289,12 @@
             priority="0"/>
         <location
             file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/values/strings.xml"
-            line="4"
+            line="5"
             column="40"
-            startOffset="160"
-            endLine="4"
+            startOffset="218"
+            endLine="5"
             endColumn="63"
-            endOffset="183"/>
+            endOffset="241"/>
     </incident>
 
     <incident
@@ -214,24 +346,31 @@
     </incident>
 
     <incident
-        id="TextFields"
+        id="Autofill"
         severity="warning"
-        message="This text field does not specify an `inputType`">
-        <fix-attribute
-            description="Set inputType"
-            namespace="http://schemas.android.com/apk/res/android"
-            attribute="inputType"
-            value="TODO"
-            point="4"
-            mark="0"/>
+        message="Missing `autofillHints` attribute">
+        <fix-alternatives>
+            <fix-attribute
+                description="Set autofillHints"
+                namespace="http://schemas.android.com/apk/res/android"
+                attribute="autofillHints"
+                value=""
+                point="0"
+                mark="0"/>
+            <fix-attribute
+                description="Set importantForAutofill=&quot;no&quot;"
+                namespace="http://schemas.android.com/apk/res/android"
+                attribute="importantForAutofill"
+                value="no"/>
+        </fix-alternatives>
         <location
             file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
-            line="28"
-            column="6"
-            startOffset="929"
-            endLine="28"
-            endColumn="14"
-            endOffset="937"/>
+            line="200"
+            column="10"
+            startOffset="7012"
+            endLine="200"
+            endColumn="18"
+            endOffset="7020"/>
     </incident>
 
     <incident
@@ -253,13 +392,69 @@
                 value="no"/>
         </fix-alternatives>
         <location
-            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
-            line="28"
-            column="6"
-            startOffset="929"
-            endLine="28"
-            endColumn="14"
-            endOffset="937"/>
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_settings.xml"
+            line="57"
+            column="10"
+            startOffset="2097"
+            endLine="57"
+            endColumn="18"
+            endOffset="2105"/>
+    </incident>
+
+    <incident
+        id="Autofill"
+        severity="warning"
+        message="Missing `autofillHints` attribute">
+        <fix-alternatives>
+            <fix-attribute
+                description="Set autofillHints"
+                namespace="http://schemas.android.com/apk/res/android"
+                attribute="autofillHints"
+                value=""
+                point="0"
+                mark="0"/>
+            <fix-attribute
+                description="Set importantForAutofill=&quot;no&quot;"
+                namespace="http://schemas.android.com/apk/res/android"
+                attribute="importantForAutofill"
+                value="no"/>
+        </fix-alternatives>
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_settings.xml"
+            line="75"
+            column="14"
+            startOffset="2791"
+            endLine="75"
+            endColumn="22"
+            endOffset="2799"/>
+    </incident>
+
+    <incident
+        id="Autofill"
+        severity="warning"
+        message="Missing `autofillHints` attribute">
+        <fix-alternatives>
+            <fix-attribute
+                description="Set autofillHints"
+                namespace="http://schemas.android.com/apk/res/android"
+                attribute="autofillHints"
+                value=""
+                point="0"
+                mark="0"/>
+            <fix-attribute
+                description="Set importantForAutofill=&quot;no&quot;"
+                namespace="http://schemas.android.com/apk/res/android"
+                attribute="importantForAutofill"
+                value="no"/>
+        </fix-alternatives>
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_settings.xml"
+            line="141"
+            column="14"
+            startOffset="5355"
+            endLine="141"
+            endColumn="22"
+            endOffset="5363"/>
     </incident>
 
     <incident
@@ -268,12 +463,12 @@
         message="Do not concatenate text displayed with `setText`. Use resource string with placeholders.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/FileAdapter.java"
-            line="38"
+            line="53"
             column="33"
-            startOffset="1122"
-            endLine="38"
+            startOffset="1716"
+            endLine="53"
             endColumn="81"
-            endOffset="1170"/>
+            endOffset="1764"/>
     </incident>
 
     <incident
@@ -282,26 +477,12 @@
         message="Do not concatenate text displayed with `setText`. Use resource string with placeholders.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
-            line="144"
+            line="222"
             column="32"
-            startOffset="5820"
-            endLine="144"
-            endColumn="91"
-            endOffset="5879"/>
-    </incident>
-
-    <incident
-        id="SetTextI18n"
-        severity="warning"
-        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders.">
-        <location
-            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
-            line="148"
-            column="32"
-            startOffset="6111"
-            endLine="148"
-            endColumn="91"
-            endOffset="6170"/>
+            startOffset="9117"
+            endLine="222"
+            endColumn="114"
+            endOffset="9199"/>
     </incident>
 
     <incident
@@ -310,12 +491,12 @@
         message="String literal in `setText` can not be translated. Use Android resources instead.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
-            line="160"
-            column="28"
-            startOffset="6474"
-            endLine="160"
-            endColumn="44"
-            endOffset="6490"/>
+            line="222"
+            column="32"
+            startOffset="9117"
+            endLine="222"
+            endColumn="42"
+            endOffset="9127"/>
     </incident>
 
     <incident
@@ -324,12 +505,180 @@
         message="Do not concatenate text displayed with `setText`. Use resource string with placeholders.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
-            line="214"
+            line="267"
+            column="41"
+            startOffset="10747"
+            endLine="267"
+            endColumn="106"
+            endOffset="10812"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
+            line="308"
+            column="29"
+            startOffset="12486"
+            endLine="308"
+            endColumn="44"
+            endOffset="12501"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
+            line="308"
+            column="29"
+            startOffset="12486"
+            endLine="308"
+            endColumn="38"
+            endOffset="12495"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
+            line="313"
+            column="39"
+            startOffset="12690"
+            endLine="313"
+            endColumn="61"
+            endOffset="12712"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
+            line="313"
+            column="39"
+            startOffset="12690"
+            endLine="313"
+            endColumn="49"
+            endOffset="12700"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
+            line="428"
             column="37"
-            startOffset="8910"
-            endLine="214"
-            endColumn="208"
-            endOffset="9081"/>
+            startOffset="17209"
+            endLine="428"
+            endColumn="133"
+            endOffset="17305"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
+            line="428"
+            column="37"
+            startOffset="17209"
+            endLine="428"
+            endColumn="48"
+            endOffset="17220"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
+            line="428"
+            column="81"
+            startOffset="17253"
+            endLine="428"
+            endColumn="91"
+            endOffset="17263"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
+            line="428"
+            column="125"
+            startOffset="17297"
+            endLine="428"
+            endColumn="133"
+            endOffset="17305"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
+            line="453"
+            column="44"
+            startOffset="18320"
+            endLine="453"
+            endColumn="126"
+            endOffset="18402"/>
+    </incident>
+
+    <incident
+        id="SetTextI18n"
+        severity="warning"
+        message="String literal in `setText` can not be translated. Use Android resources instead.">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/MainActivity.java"
+            line="453"
+            column="44"
+            startOffset="18320"
+            endLine="453"
+            endColumn="54"
+            endOffset="18330"/>
+    </incident>
+
+    <incident
+        id="HardcodedText"
+        severity="warning"
+        message="Hardcoded string &quot;Activity&quot;, should use `@string` resource">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
+            line="160"
+            column="13"
+            startOffset="5667"
+            endLine="160"
+            endColumn="36"
+            endOffset="5690"/>
+    </incident>
+
+    <incident
+        id="HardcodedText"
+        severity="warning"
+        message="Hardcoded string &quot;8080&quot;, should use `@string` resource">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_settings.xml"
+            line="146"
+            column="17"
+            startOffset="5565"
+            endLine="146"
+            endColumn="36"
+            endOffset="5584"/>
     </incident>
 
 </incidents>

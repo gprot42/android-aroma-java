@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.0.7"
+VERSION=$(cat version.md | tr -d '[:space:]')
 OUTPUT_DIR="/Users/aicoder/src/grapheneos-shizuku/apks"
 
 show_help() {
@@ -72,29 +72,18 @@ if [ "$1" == "--release" ]; then
         exit 1
     fi
     
+    # Delete existing release if it exists
+    if gh release view "v${VERSION}" &>/dev/null; then
+        echo "Release v${VERSION} already exists, replacing..."
+        gh release delete "v${VERSION}" --yes
+        git tag -d "v${VERSION}" 2>/dev/null
+        git push origin --delete "v${VERSION}" 2>/dev/null
+    fi
+
     # Create GitHub release with signed APK
     gh release create "v${VERSION}" "$SIGNED_APK" \
         --title "AROMA v${VERSION}" \
-        --notes "## AROMA v${VERSION}
-
-### New in this release
-- Upload progress bar with percentage, speed, and byte tracking
-- Remote terminal shell (/terminal) for executing commands on device
-- File info panel showing size and details when selecting files
-- Fixed Firefox POST resubmit warning (PRG pattern)
-
-### Features
-- File manager web interface with dark/light theme support
-- Upload, download, rename, delete files
-- Create folders
-- Alphabetical file sorting
-- ngrok tunnel support for remote access
-- QR code for easy connection
-- Configurable storage folder (Downloads, Documents, Pictures, Music, Movies)
-- HTTP Basic Auth for security
-
-### Installation
-Download the APK and install on your Android device."
+        --generate-notes
     
     if [ $? -eq 0 ]; then
         echo "GitHub release v${VERSION} created successfully!"

@@ -2,6 +2,11 @@ plugins {
     id 'com.android.application'
 }
 
+def versionFile = rootProject.file("version.md")
+def appVersionName = versionFile.text.trim()
+def versionParts = appVersionName.tokenize('.')
+def appVersionCode = versionParts[0].toInteger() * 10000 + versionParts[1].toInteger() * 100 + versionParts[2].toInteger()
+
 android {
     namespace "com.example.aroma"
     compileSdkVersion 35
@@ -9,8 +14,12 @@ android {
         applicationId "com.example.aroma"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 7
-        versionName "0.0.7"
+        versionCode appVersionCode
+        versionName appVersionName
+        buildConfigField "String", "APP_VERSION", "\"${appVersionName}\""
+    }
+    buildFeatures {
+        buildConfig true
     }
     buildTypes {
         release {
