@@ -1,7 +1,7 @@
 #!/bin/bash
 
 VERSION=$(cat version.md | tr -d '[:space:]')
-OUTPUT_DIR="/Users/aicoder/src/grapheneos-shizuku/apks"
+OUTPUT_DIR="."
 
 show_help() {
     echo "AROMA Build Script v${VERSION}"
@@ -41,8 +41,6 @@ if [ "$1" == "--release" ]; then
     UNSIGNED_APK="${OUTPUT_DIR}/aroma-release-${VERSION}-unsigned.apk"
     SIGNED_APK="${OUTPUT_DIR}/aroma-release-${VERSION}-signed.apk"
     
-    # Copy unsigned APK to output directory
-    mkdir -p "$OUTPUT_DIR"
     cp "$APK_PATH" "$UNSIGNED_APK"
     echo "Unsigned APK copied to $UNSIGNED_APK"
     
@@ -57,10 +55,6 @@ if [ "$1" == "--release" ]; then
         echo "APK signing failed!"
         exit 1
     fi
-    
-    # Also copy to Downloads for convenience
-    cp "$SIGNED_APK" ~/Downloads/
-    echo "Signed APK also copied to ~/Downloads/"
     
     echo ""
     echo "Creating GitHub release v${VERSION}..."
