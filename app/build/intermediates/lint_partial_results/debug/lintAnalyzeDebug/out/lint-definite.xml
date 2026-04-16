@@ -21,12 +21,12 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
-            line="77"
+            line="78"
             column="35"
-            startOffset="2268"
-            endLine="77"
+            startOffset="2306"
+            endLine="78"
             endColumn="46"
-            endOffset="2279"/>
+            endOffset="2317"/>
     </incident>
 
     <incident
@@ -35,12 +35,12 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
-            line="251"
+            line="252"
             column="45"
-            startOffset="14257"
-            endLine="251"
+            startOffset="14295"
+            endLine="252"
             endColumn="56"
-            endOffset="14268"/>
+            endOffset="14306"/>
     </incident>
 
     <incident
@@ -49,12 +49,12 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
-            line="464"
+            line="470"
             column="50"
-            startOffset="36831"
-            endLine="464"
+            startOffset="38799"
+            endLine="470"
             endColumn="61"
-            endOffset="36842"/>
+            endOffset="38810"/>
     </incident>
 
     <incident
@@ -63,12 +63,12 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
-            line="831"
+            line="841"
             column="32"
-            startOffset="58754"
-            endLine="831"
+            startOffset="60895"
+            endLine="841"
             endColumn="43"
-            endOffset="58765"/>
+            endOffset="60906"/>
     </incident>
 
     <incident
@@ -77,12 +77,12 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
-            line="859"
+            line="869"
             column="16"
-            startOffset="60254"
-            endLine="859"
+            startOffset="62395"
+            endLine="869"
             endColumn="96"
-            endOffset="60334"/>
+            endOffset="62475"/>
     </incident>
 
     <incident
@@ -91,12 +91,12 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
-            line="1075"
+            line="1085"
             column="25"
-            startOffset="74589"
-            endLine="1075"
+            startOffset="76730"
+            endLine="1085"
             endColumn="36"
-            endOffset="74600"/>
+            endOffset="76741"/>
     </incident>
 
     <incident
@@ -105,12 +105,12 @@
         message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
         <location
             file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/example/aroma/WebServer.java"
-            line="1075"
+            line="1085"
             column="58"
-            startOffset="74622"
-            endLine="1075"
+            startOffset="76763"
+            endLine="1085"
             endColumn="69"
-            endOffset="74633"/>
+            endOffset="76774"/>
     </incident>
 
     <incident

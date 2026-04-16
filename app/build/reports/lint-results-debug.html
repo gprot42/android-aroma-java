@@ -179,7 +179,7 @@ document.getElementById(id).style.display = 'none';
     <div class="mdl-layout__header-row">
       <span class="mdl-layout-title">Lint Report: 2 errors and 47 warnings</span>
       <div class="mdl-layout-spacer"></div>
-      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at Sun Mar 22 07:08:03 CET 2026 by AGP (8.12.0)</nav>
+      <nav class="mdl-navigation mdl-layout--large-screen-only">Check performed at Thu Apr 16 21:49:36 CEST 2026 by AGP (8.12.0)</nav>
     </div>
   </header>
   <div class="mdl-layout__drawer">
@@ -371,64 +371,64 @@ Dismiss</button>            </div>
 <span class="lineno"> 262 </span>                }
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:251</span>: <span class="message">Implicitly using the default locale is a common source of bugs: Use <code>toLowerCase(Locale)</code> instead. For strings meant to be internal use <code>Locale.ROOT</code>, otherwise <code>Locale.getDefault()</code>.</span><br /><pre class="errorlines">
-<span class="lineno">  248 </span>      html.append(<span class="string">"&lt;div class='file-meta'>Folder&lt;/div>"</span>);
-<span class="lineno">  249 </span>      html.append(<span class="string">"&lt;/div>"</span>);
-<span class="lineno">  250 </span>  } <span class="keyword">else</span> {
-<span class="caretline"><span class="lineno">  251 </span>      String lowerName = name.<span class="warning">toLowerCase</span>();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  252 </span>      <span class="keyword">boolean</span> canPreview = lowerName.endsWith(<span class="string">".jpg"</span>) || lowerName.endsWith(<span class="string">".jpeg"</span>) || 
-<span class="lineno">  253 </span>          lowerName.endsWith(<span class="string">".png"</span>) || lowerName.endsWith(<span class="string">".gif"</span>) || lowerName.endsWith(<span class="string">".webp"</span>) ||
-<span class="lineno">  254 </span>          lowerName.endsWith(<span class="string">".mp4"</span>) || lowerName.endsWith(<span class="string">".webm"</span>) || lowerName.endsWith(<span class="string">".mov"</span>) ||
+<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:252</span>: <span class="message">Implicitly using the default locale is a common source of bugs: Use <code>toLowerCase(Locale)</code> instead. For strings meant to be internal use <code>Locale.ROOT</code>, otherwise <code>Locale.getDefault()</code>.</span><br /><pre class="errorlines">
+<span class="lineno">  249 </span>      html.append(<span class="string">"&lt;div class='file-meta'>Folder&lt;/div>"</span>);
+<span class="lineno">  250 </span>      html.append(<span class="string">"&lt;/div>"</span>);
+<span class="lineno">  251 </span>  } <span class="keyword">else</span> {
+<span class="caretline"><span class="lineno">  252 </span>      String lowerName = name.<span class="warning">toLowerCase</span>();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno">  253 </span>      <span class="keyword">boolean</span> canPreview = lowerName.endsWith(<span class="string">".jpg"</span>) || lowerName.endsWith(<span class="string">".jpeg"</span>) || 
+<span class="lineno">  254 </span>          lowerName.endsWith(<span class="string">".png"</span>) || lowerName.endsWith(<span class="string">".gif"</span>) || lowerName.endsWith(<span class="string">".webp"</span>) ||
+<span class="lineno">  255 </span>          lowerName.endsWith(<span class="string">".mp4"</span>) || lowerName.endsWith(<span class="string">".webm"</span>) || lowerName.endsWith(<span class="string">".mov"</span>) ||
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:464</span>: <span class="message">Implicitly using the default locale is a common source of bugs: Use <code>toLowerCase(Locale)</code> instead. For strings meant to be internal use <code>Locale.ROOT</code>, otherwise <code>Locale.getDefault()</code>.</span><br /><pre class="errorlines">
-<span class="lineno">  461 </span>  String queryString = session.getQueryParameterString();
-<span class="lineno">  462 </span>  
-<span class="lineno">  463 </span>  <span class="keyword">if</span> (<span class="string">"preview"</span>.equals(queryString)) {
-<span class="caretline"><span class="lineno">  464 </span>      String filename = file.getName().<span class="warning">toLowerCase</span>();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  465 </span>      String previewStyle = <span class="string">"&lt;!DOCTYPE html>&lt;html>&lt;head>&lt;meta charset='UTF-8'>&lt;meta name='viewport' content='width=device-width,initial-scale=1'>&lt;style>body{margin:0;padding:20px;background:#1a1a2e;color:#eee;font-family:system-ui,sans-serif}pre{background:#16213e;padding:20px;border-radius:8px;overflow-x:auto;white-space:pre-wrap;word-wrap:break-word;font-size:14px;line-height:1.5}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}h2{margin:0;color:#4da6ff}.back-btn{background:#4da6ff;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:14px}.media-container{text-align:center;background:#16213e;border-radius:8px;padding:20px}img,video,audio{max-width:100%;height:auto;border-radius:4px}iframe{border:none;border-radius:4px}&lt;/style>&lt;/head>&lt;body>"</span>;
-<span class="lineno">  466 </span>      String previewEnd = <span class="string">"&lt;/body>&lt;/html>"</span>;
-<span class="lineno">  467 </span>      String backLink = <span class="string">"&lt;a class='back-btn' href='javascript:history.back()'>Back&lt;/a>"</span>;
+<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:470</span>: <span class="message">Implicitly using the default locale is a common source of bugs: Use <code>toLowerCase(Locale)</code> instead. For strings meant to be internal use <code>Locale.ROOT</code>, otherwise <code>Locale.getDefault()</code>.</span><br /><pre class="errorlines">
+<span class="lineno">  467 </span>  String queryString = session.getQueryParameterString();
+<span class="lineno">  468 </span>  
+<span class="lineno">  469 </span>  <span class="keyword">if</span> (<span class="string">"preview"</span>.equals(queryString)) {
+<span class="caretline"><span class="lineno">  470 </span>      String filename = file.getName().<span class="warning">toLowerCase</span>();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno">  471 </span>      String previewStyle = <span class="string">"&lt;!DOCTYPE html>&lt;html>&lt;head>&lt;meta charset='UTF-8'>&lt;meta name='viewport' content='width=device-width,initial-scale=1'>&lt;style>body{margin:0;padding:20px;background:#1a1a2e;color:#eee;font-family:system-ui,sans-serif}pre{background:#16213e;padding:20px;border-radius:8px;overflow-x:auto;white-space:pre-wrap;word-wrap:break-word;font-size:14px;line-height:1.5}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}h2{margin:0;color:#4da6ff}.back-btn{background:#4da6ff;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:14px}.media-container{text-align:center;background:#16213e;border-radius:8px;padding:20px}img,video,audio{max-width:100%;height:auto;border-radius:4px}iframe{border:none;border-radius:4px}&lt;/style>&lt;/head>&lt;body>"</span>;
+<span class="lineno">  472 </span>      String previewEnd = <span class="string">"&lt;/body>&lt;/html>"</span>;
+<span class="lineno">  473 </span>      String backLink = <span class="string">"&lt;a class='back-btn' href='javascript:history.back()'>Back&lt;/a>"</span>;
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:831</span>: <span class="message">Implicitly using the default locale is a common source of bugs: Use <code>toLowerCase(Locale)</code> instead. For strings meant to be internal use <code>Locale.ROOT</code>, otherwise <code>Locale.getDefault()</code>.</span><br /><pre class="errorlines">
-<span class="lineno">  828 </span>    }
-<span class="lineno">  829 </span>
-<span class="lineno">  830 </span>    <span class="keyword">public</span> <span class="keyword">static</span> String getMimeTypeForFile(String filename) {
-<span class="caretline"><span class="lineno">  831 </span>        String name = filename.<span class="warning">toLowerCase</span>();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  832 </span>        <span class="keyword">if</span> (name.endsWith(<span class="string">".html"</span>) || name.endsWith(<span class="string">".htm"</span>)) <span class="keyword">return</span> <span class="string">"text/html"</span>;
-<span class="lineno">  833 </span>        <span class="keyword">if</span> (name.endsWith(<span class="string">".jpg"</span>) || name.endsWith(<span class="string">".jpeg"</span>)) <span class="keyword">return</span> <span class="string">"image/jpeg"</span>;
-<span class="lineno">  834 </span>        <span class="keyword">if</span> (name.endsWith(<span class="string">".png"</span>)) <span class="keyword">return</span> <span class="string">"image/png"</span>;
+<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:841</span>: <span class="message">Implicitly using the default locale is a common source of bugs: Use <code>toLowerCase(Locale)</code> instead. For strings meant to be internal use <code>Locale.ROOT</code>, otherwise <code>Locale.getDefault()</code>.</span><br /><pre class="errorlines">
+<span class="lineno">  838 </span>    }
+<span class="lineno">  839 </span>
+<span class="lineno">  840 </span>    <span class="keyword">public</span> <span class="keyword">static</span> String getMimeTypeForFile(String filename) {
+<span class="caretline"><span class="lineno">  841 </span>        String name = filename.<span class="warning">toLowerCase</span>();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno">  842 </span>        <span class="keyword">if</span> (name.endsWith(<span class="string">".html"</span>) || name.endsWith(<span class="string">".htm"</span>)) <span class="keyword">return</span> <span class="string">"text/html"</span>;
+<span class="lineno">  843 </span>        <span class="keyword">if</span> (name.endsWith(<span class="string">".jpg"</span>) || name.endsWith(<span class="string">".jpeg"</span>)) <span class="keyword">return</span> <span class="string">"image/jpeg"</span>;
+<span class="lineno">  844 </span>        <span class="keyword">if</span> (name.endsWith(<span class="string">".png"</span>)) <span class="keyword">return</span> <span class="string">"image/png"</span>;
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:859</span>: <span class="message">Implicitly using the default locale is a common source of bugs: Use <code>String.format(Locale, ...)</code> instead</span><br /><pre class="errorlines">
-<span class="lineno">  856 </span>      <span class="keyword">if</span> (size &lt;= <span class="number">0</span>) <span class="keyword">return</span> <span class="string">"0 B"</span>;
-<span class="lineno">  857 </span>      <span class="keyword">final</span> String[] units = {<span class="string">"B"</span>, <span class="string">"KB"</span>, <span class="string">"MB"</span>, <span class="string">"GB"</span>, <span class="string">"TB"</span>};
-<span class="lineno">  858 </span>      <span class="keyword">int</span> digitGroups = (<span class="keyword">int</span>) (Math.log10(size) / Math.log10(<span class="number">1024</span>));
-<span class="caretline"><span class="lineno">  859 </span>      <span class="keyword">return</span> <span class="warning">String.format(<span class="string">"%.1f %s"</span>, size / Math.pow(<span class="number">1024</span>, digitGroups), units[digitGroups])</span>;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno">  860 </span>  }
-<span class="lineno">  861 </span>
-<span class="lineno">  862 </span>  <span class="keyword">private</span> <span class="keyword">boolean</span> deleteRecursively(File file) {
+<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:869</span>: <span class="message">Implicitly using the default locale is a common source of bugs: Use <code>String.format(Locale, ...)</code> instead</span><br /><pre class="errorlines">
+<span class="lineno">  866 </span>      <span class="keyword">if</span> (size &lt;= <span class="number">0</span>) <span class="keyword">return</span> <span class="string">"0 B"</span>;
+<span class="lineno">  867 </span>      <span class="keyword">final</span> String[] units = {<span class="string">"B"</span>, <span class="string">"KB"</span>, <span class="string">"MB"</span>, <span class="string">"GB"</span>, <span class="string">"TB"</span>};
+<span class="lineno">  868 </span>      <span class="keyword">int</span> digitGroups = (<span class="keyword">int</span>) (Math.log10(size) / Math.log10(<span class="number">1024</span>));
+<span class="caretline"><span class="lineno">  869 </span>      <span class="keyword">return</span> <span class="warning">String.format(<span class="string">"%.1f %s"</span>, size / Math.pow(<span class="number">1024</span>, digitGroups), units[digitGroups])</span>;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno">  870 </span>  }
+<span class="lineno">  871 </span>
+<span class="lineno">  872 </span>  <span class="keyword">private</span> <span class="keyword">boolean</span> deleteRecursively(File file) {
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:1075</span>: <span class="message">Implicitly using the default locale is a common source of bugs: Use <code>toLowerCase(Locale)</code> instead. For strings meant to be internal use <code>Locale.ROOT</code>, otherwise <code>Locale.getDefault()</code>.</span><br /><pre class="errorlines">
-<span class="lineno"> 1072 </span>  
-<span class="lineno"> 1073 </span>  String[] dangerousCommands = {<span class="string">"rm -rf /"</span>, <span class="string">"mkfs"</span>, <span class="string">"dd if="</span>, <span class="string">"> /dev/"</span>, <span class="string">"reboot"</span>, <span class="string">"shutdown"</span>, <span class="string">"halt"</span>, <span class="string">"poweroff"</span>};
-<span class="lineno"> 1074 </span>  <span class="keyword">for</span> (String dangerous : dangerousCommands) {
-<span class="caretline"><span class="lineno"> 1075 </span>      <span class="keyword">if</span> (cmd.<span class="warning">toLowerCase</span>().contains(dangerous.toLowerCase())) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 1076 </span>          <span class="keyword">return</span> jsonResponse(<span class="string">"{\"error\":\"Command blocked for safety\"}"</span>);
-<span class="lineno"> 1077 </span>      }
-<span class="lineno"> 1078 </span>  }
+<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:1085</span>: <span class="message">Implicitly using the default locale is a common source of bugs: Use <code>toLowerCase(Locale)</code> instead. For strings meant to be internal use <code>Locale.ROOT</code>, otherwise <code>Locale.getDefault()</code>.</span><br /><pre class="errorlines">
+<span class="lineno"> 1082 </span>  
+<span class="lineno"> 1083 </span>  String[] dangerousCommands = {<span class="string">"rm -rf /"</span>, <span class="string">"mkfs"</span>, <span class="string">"dd if="</span>, <span class="string">"> /dev/"</span>, <span class="string">"reboot"</span>, <span class="string">"shutdown"</span>, <span class="string">"halt"</span>, <span class="string">"poweroff"</span>};
+<span class="lineno"> 1084 </span>  <span class="keyword">for</span> (String dangerous : dangerousCommands) {
+<span class="caretline"><span class="lineno"> 1085 </span>      <span class="keyword">if</span> (cmd.<span class="warning">toLowerCase</span>().contains(dangerous.toLowerCase())) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 1086 </span>          <span class="keyword">return</span> jsonResponse(<span class="string">"{\"error\":\"Command blocked for safety\"}"</span>);
+<span class="lineno"> 1087 </span>      }
+<span class="lineno"> 1088 </span>  }
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:1075</span>: <span class="message">Implicitly using the default locale is a common source of bugs: Use <code>toLowerCase(Locale)</code> instead. For strings meant to be internal use <code>Locale.ROOT</code>, otherwise <code>Locale.getDefault()</code>.</span><br /><pre class="errorlines">
-<span class="lineno"> 1072 </span>  
-<span class="lineno"> 1073 </span>  String[] dangerousCommands = {<span class="string">"rm -rf /"</span>, <span class="string">"mkfs"</span>, <span class="string">"dd if="</span>, <span class="string">"> /dev/"</span>, <span class="string">"reboot"</span>, <span class="string">"shutdown"</span>, <span class="string">"halt"</span>, <span class="string">"poweroff"</span>};
-<span class="lineno"> 1074 </span>  <span class="keyword">for</span> (String dangerous : dangerousCommands) {
-<span class="caretline"><span class="lineno"> 1075 </span>      <span class="keyword">if</span> (cmd.toLowerCase().contains(dangerous.<span class="warning">toLowerCase</span>())) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 1076 </span>          <span class="keyword">return</span> jsonResponse(<span class="string">"{\"error\":\"Command blocked for safety\"}"</span>);
-<span class="lineno"> 1077 </span>      }
-<span class="lineno"> 1078 </span>  }
+<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:1085</span>: <span class="message">Implicitly using the default locale is a common source of bugs: Use <code>toLowerCase(Locale)</code> instead. For strings meant to be internal use <code>Locale.ROOT</code>, otherwise <code>Locale.getDefault()</code>.</span><br /><pre class="errorlines">
+<span class="lineno"> 1082 </span>  
+<span class="lineno"> 1083 </span>  String[] dangerousCommands = {<span class="string">"rm -rf /"</span>, <span class="string">"mkfs"</span>, <span class="string">"dd if="</span>, <span class="string">"> /dev/"</span>, <span class="string">"reboot"</span>, <span class="string">"shutdown"</span>, <span class="string">"halt"</span>, <span class="string">"poweroff"</span>};
+<span class="lineno"> 1084 </span>  <span class="keyword">for</span> (String dangerous : dangerousCommands) {
+<span class="caretline"><span class="lineno"> 1085 </span>      <span class="keyword">if</span> (cmd.toLowerCase().contains(dangerous.<span class="warning">toLowerCase</span>())) {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 1086 </span>          <span class="keyword">return</span> jsonResponse(<span class="string">"{\"error\":\"Command blocked for safety\"}"</span>);
+<span class="lineno"> 1087 </span>      }
+<span class="lineno"> 1088 </span>  }
 </pre>
 
 </div>
@@ -470,24 +470,24 @@ Dismiss</button>            </div>
               <div class="mdl-card__supporting-text">
 <div class="issue">
 <div class="warningslist">
-<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:1108</span>: <span class="message">Call requires API level 26 (current min is 21): <code>java.lang.Process#waitFor</code></span><br /><pre class="errorlines">
-<span class="lineno"> 1105 </span>        outThread.start();
-<span class="lineno"> 1106 </span>        errThread.start();
-<span class="lineno"> 1107 </span>        
-<span class="caretline"><span class="lineno"> 1108 </span>        <span class="keyword">boolean</span> finished = process.<span class="error">waitFor</span>(<span class="number">30</span>, java.util.concurrent.TimeUnit.SECONDS);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 1109 </span>        <span class="keyword">if</span> (!finished) {
-<span class="lineno"> 1110 </span>            process.destroyForcibly();
-<span class="lineno"> 1111 </span>            <span class="keyword">return</span> jsonResponse(<span class="string">"{\"error\":\"Command timed out (30s limit)\"}"</span>);
+<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:1118</span>: <span class="message">Call requires API level 26 (current min is 21): <code>java.lang.Process#waitFor</code></span><br /><pre class="errorlines">
+<span class="lineno"> 1115 </span>        outThread.start();
+<span class="lineno"> 1116 </span>        errThread.start();
+<span class="lineno"> 1117 </span>        
+<span class="caretline"><span class="lineno"> 1118 </span>        <span class="keyword">boolean</span> finished = process.<span class="error">waitFor</span>(<span class="number">30</span>, java.util.concurrent.TimeUnit.SECONDS);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 1119 </span>        <span class="keyword">if</span> (!finished) {
+<span class="lineno"> 1120 </span>            process.destroyForcibly();
+<span class="lineno"> 1121 </span>            <span class="keyword">return</span> jsonResponse(<span class="string">"{\"error\":\"Command timed out (30s limit)\"}"</span>);
 </pre>
 
-<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:1110</span>: <span class="message">Call requires API level 26 (current min is 21): <code>java.lang.Process#destroyForcibly</code></span><br /><pre class="errorlines">
-<span class="lineno"> 1107 </span>        
-<span class="lineno"> 1108 </span>        <span class="keyword">boolean</span> finished = process.waitFor(<span class="number">30</span>, java.util.concurrent.TimeUnit.SECONDS);
-<span class="lineno"> 1109 </span>        <span class="keyword">if</span> (!finished) {
-<span class="caretline"><span class="lineno"> 1110 </span>            process.<span class="error">destroyForcibly</span>();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-<span class="lineno"> 1111 </span>            <span class="keyword">return</span> jsonResponse(<span class="string">"{\"error\":\"Command timed out (30s limit)\"}"</span>);
-<span class="lineno"> 1112 </span>        }
-<span class="lineno"> 1113 </span>        
+<span class="location"><a href="../../src/main/java/com/example/aroma/WebServer.java">../../src/main/java/com/example/aroma/WebServer.java</a>:1120</span>: <span class="message">Call requires API level 26 (current min is 21): <code>java.lang.Process#destroyForcibly</code></span><br /><pre class="errorlines">
+<span class="lineno"> 1117 </span>        
+<span class="lineno"> 1118 </span>        <span class="keyword">boolean</span> finished = process.waitFor(<span class="number">30</span>, java.util.concurrent.TimeUnit.SECONDS);
+<span class="lineno"> 1119 </span>        <span class="keyword">if</span> (!finished) {
+<span class="caretline"><span class="lineno"> 1120 </span>            process.<span class="error">destroyForcibly</span>();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<span class="lineno"> 1121 </span>            <span class="keyword">return</span> jsonResponse(<span class="string">"{\"error\":\"Command timed out (30s limit)\"}"</span>);
+<span class="lineno"> 1122 </span>        }
+<span class="lineno"> 1123 </span>        
 </pre>
 
 </div>

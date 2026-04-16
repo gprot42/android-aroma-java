@@ -14,6 +14,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -297,8 +298,10 @@ public class WebServer extends NanoHTTPD {
         html.append("<input type='file' name='uploadedFile' webkitdirectory id='folderInput' style='display:none'>");
         html.append("<div style='display:flex;gap:8px;flex-wrap:wrap'>");
         html.append("<button type='button' class='btn btn-secondary' onclick='document.getElementById(\"fileInput\").click()'>Select Files</button>");
-        html.append("<button type='button' class='btn btn-secondary' onclick='document.getElementById(\"folderInput\").click()'>Select Folder</button>");
+        html.append("<button type='button' class='btn btn-secondary' onclick='addFolder()'>Add Folder</button>");
+        html.append("<button type='button' class='btn btn-secondary' id='clearSelBtn' onclick='clearSelection()' style='display:none'>Clear</button>");
         html.append("</div>");
+        html.append("<div style='margin-top:6px;font-size:0.75em;color:var(--meta)'>Tip: click <b>Add Folder</b> multiple times to migrate several folders in one upload.</div>");
         html.append("<div id='selectedFiles' style='margin-top:10px;font-size:0.85em;color:var(--meta)'></div>");
         html.append("</div>");
         html.append("<div id='uploadProgress' style='display:none;margin-bottom:10px'>");
@@ -433,14 +436,17 @@ public class WebServer extends NanoHTTPD {
         html.append("function formatSize(b){if(b<=0)return'0 B';let u=['B','KB','MB','GB','TB'];let i=Math.floor(Math.log(b)/Math.log(1024));return(b/Math.pow(1024,i)).toFixed(1)+' '+u[i]}");
         html.append("document.querySelectorAll('input[name=selected]').forEach(c=>c.addEventListener('change',updateFileInfoPanel));");
         html.append("document.querySelectorAll('.file-item').forEach(item=>{let n=item.dataset.name;let s=parseInt(item.dataset.size)||0;let m=parseInt(item.dataset.modified)||0;fileData[n]={size:s,modified:m}});");
-        html.append("let activeInput=null;let uploadFiles=[];let sessionKey='aroma_upload_'+window.location.pathname;");
+        html.append("let activeInput=null;let uploadFiles=[];let addedFolders=[];let pickedFiles=[];let sessionKey='aroma_upload_'+window.location.pathname;");
         html.append("function getUploadedFiles(){try{return JSON.parse(localStorage.getItem(sessionKey))||{}}catch(e){return{}}}");
         html.append("function saveUploadedFile(fname,size){let data=getUploadedFiles();data[fname]={size:size,time:Date.now()};localStorage.setItem(sessionKey,JSON.stringify(data))}");
         html.append("function clearUploadSession(){localStorage.removeItem(sessionKey)}");
-        html.append("function updateFileStatus(){let fi=document.getElementById('fileInput');let fo=document.getElementById('folderInput');let sf=document.getElementById('selectedFiles');let btn=document.getElementById('uploadBtn');let allFiles=activeInput==='file'?Array.from(fi.files):(activeInput==='folder'?Array.from(fo.files):[]);uploadFiles=allFiles.filter(f=>{let n=(f.webkitRelativePath||f.name).split('/').pop();return!n.startsWith('.')&&n!=='Thumbs.db'&&n!=='desktop.ini'});let count=uploadFiles.length;if(count>0){let totalSize=uploadFiles.reduce((a,f)=>a+f.size,0);let names=uploadFiles.map(f=>f.webkitRelativePath||f.name);let uploaded=getUploadedFiles();let alreadyUploaded=uploadFiles.filter(f=>{let fn=f.webkitRelativePath||f.name;return uploaded[fn]&&uploaded[fn].size===f.size}).length;let info=count+' file(s) selected ('+formatSize(totalSize)+')';if(alreadyUploaded>0){info+='<br><span style=\"color:#4da6ff\">'+alreadyUploaded+' already uploaded - will resume remaining '+(count-alreadyUploaded)+'</span>'}info+=':<br>'+names.slice(0,5).join(', ')+(names.length>5?' ...':'');sf.innerHTML=info;btn.disabled=false;btn.textContent=alreadyUploaded>0?'Resume Upload':'Upload'}else{sf.textContent='';btn.disabled=true;btn.textContent='Upload'}}");
-        html.append("document.getElementById('fileInput').addEventListener('change',function(){activeInput='file';updateFileStatus()});");
-        html.append("document.getElementById('folderInput').addEventListener('change',function(){activeInput='folder';updateFileStatus()});");
-        html.append("const CONCURRENCY=4;let isUploading=false;");
+        html.append("function addFolder(){let fi=document.getElementById('folderInput');fi.value='';fi.click()}");
+        html.append("function clearSelection(){addedFolders=[];pickedFiles=[];document.getElementById('fileInput').value='';document.getElementById('folderInput').value='';updateFileStatus()}");
+        html.append("function rebuildUploadList(){let seen={};let out=[];pickedFiles.forEach(f=>{let k=f.webkitRelativePath||f.name;if(!seen[k]){seen[k]=1;out.push(f)}});addedFolders.forEach(folder=>{folder.forEach(f=>{let k=f.webkitRelativePath||f.name;if(!seen[k]){seen[k]=1;out.push(f)}})});return out.filter(f=>{let n=(f.webkitRelativePath||f.name).split('/').pop();return!n.startsWith('.')&&n!=='Thumbs.db'&&n!=='desktop.ini'})}");
+        html.append("function updateFileStatus(){let sf=document.getElementById('selectedFiles');let btn=document.getElementById('uploadBtn');let clr=document.getElementById('clearSelBtn');uploadFiles=rebuildUploadList();let count=uploadFiles.length;if(count>0){let totalSize=uploadFiles.reduce((a,f)=>a+f.size,0);let folderNames=addedFolders.map(fs=>{let p=fs[0]&&fs[0].webkitRelativePath;return p?p.split('/')[0]:'(folder)'});let uploaded=getUploadedFiles();let alreadyUploaded=uploadFiles.filter(f=>{let fn=f.webkitRelativePath||f.name;return uploaded[fn]&&uploaded[fn].size===f.size}).length;let info=count+' file(s) ('+formatSize(totalSize)+')';if(folderNames.length>0)info+='<br>Folders ('+folderNames.length+'): '+folderNames.join(', ');if(pickedFiles.length>0)info+='<br>'+pickedFiles.length+' individual file(s)';if(alreadyUploaded>0){info+='<br><span style=\"color:#4da6ff\">'+alreadyUploaded+' already uploaded - will resume remaining '+(count-alreadyUploaded)+'</span>'}sf.innerHTML=info;btn.disabled=false;btn.textContent=alreadyUploaded>0?'Resume Upload':'Upload';clr.style.display='inline-block'}else{sf.textContent='';btn.disabled=true;btn.textContent='Upload';clr.style.display='none'}}");
+        html.append("document.getElementById('fileInput').addEventListener('change',function(){pickedFiles=pickedFiles.concat(Array.from(this.files));this.value='';updateFileStatus()});");
+        html.append("document.getElementById('folderInput').addEventListener('change',function(){let fs=Array.from(this.files);if(fs.length>0){let root=fs[0].webkitRelativePath?fs[0].webkitRelativePath.split('/')[0]:null;let dup=root&&addedFolders.some(f=>f[0]&&f[0].webkitRelativePath&&f[0].webkitRelativePath.split('/')[0]===root);if(!dup)addedFolders.push(fs)}this.value='';updateFileStatus()});");
+        html.append("const CONCURRENCY=8;let isUploading=false;");
         html.append("window.addEventListener('beforeunload',function(e){if(isUploading){e.preventDefault();e.returnValue='Upload in progress. Are you sure you want to leave?';return e.returnValue}});");
         html.append("async function startUpload(){if(uploadFiles.length===0)return;isUploading=true;let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');let pct=document.getElementById('progressPercent');let txt=document.getElementById('progressText');let spd=document.getElementById('progressSpeed');let overwrite=document.getElementById('overwriteCheck').checked;btn.disabled=true;btn.textContent='Uploading...';prog.style.display='block';let uploaded=getUploadedFiles();let filesToUpload=uploadFiles.filter(f=>{let fn=f.webkitRelativePath||f.name;return!uploaded[fn]||uploaded[fn].size!==f.size||overwrite});let skippedPrev=uploadFiles.length-filesToUpload.length;let totalFiles=filesToUpload.length;let totalBytes=filesToUpload.reduce((a,f)=>a+f.size,0);let uploadedBytes=0;let uploadedFiles=0;let success=0;let skipped=0;let failed=[];let queue=[...filesToUpload];let startTime=Date.now();function updateProgress(){let p=totalBytes>0?(uploadedBytes/totalBytes*100):0;bar.style.width=p+'%';pct.textContent=Math.round(p)+'%';txt.textContent=uploadedFiles+' / '+totalFiles+' files ('+formatSize(uploadedBytes)+' / '+formatSize(totalBytes)+')';let elapsed=(Date.now()-startTime)/1000;let speed=elapsed>0?uploadedBytes/elapsed:0;spd.textContent='Speed: '+formatSize(speed)+'/s'+(skippedPrev>0?' | Resumed: '+skippedPrev+' skipped':'')}");
         html.append("function uploadFile(file){return new Promise((resolve)=>{let fname=file.webkitRelativePath||file.name;let fd=new FormData();fd.append('uploadedFile',file,fname);fd.append('originalPath',fname);if(overwrite)fd.append('overwrite','true');let xhr=new XMLHttpRequest();xhr.upload.onprogress=function(e){if(e.lengthComputable){let prev=file._uploaded||0;file._uploaded=e.loaded;uploadedBytes+=e.loaded-prev;updateProgress()}};xhr.onload=function(){if(xhr.status>=200&&xhr.status<300){success++;saveUploadedFile(fname,file.size);resolve(true)}else{if(xhr.responseText.includes('exists')){skipped++;saveUploadedFile(fname,file.size);resolve(true)}else{let reason='HTTP '+xhr.status;if(xhr.responseText){let t=xhr.responseText;if(t.includes('permission'))reason='Permission denied';else if(t.includes('directory'))reason='Cannot create directory';else if(t.includes('temp file'))reason='Temp file error';else if(t.includes('storage'))reason='Storage full or unavailable';else if(t.length<100)reason=t.replace(/<[^>]*>/g,'').trim()||reason}failed.push({name:fname,reason:reason});resolve(false)}}};xhr.onerror=function(){failed.push({name:fname,reason:'Network error'});resolve(false)};xhr.ontimeout=function(){failed.push({name:fname,reason:'Request timed out'});resolve(false)};xhr.open('POST',window.location.pathname);xhr.send(fd)})}");
@@ -761,12 +767,16 @@ public class WebServer extends NanoHTTPD {
             
             Log.d("AROMA", "Uploading: " + originalName + " -> " + targetFile.getAbsolutePath());
             boolean success = false;
-            try (InputStream is = new FileInputStream(tempFile);
-                 OutputStream os = new FileOutputStream(targetFile)) {
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = is.read(buffer)) != -1) {
-                    os.write(buffer, 0, bytesRead);
+            try (FileInputStream fis = new FileInputStream(tempFile);
+                 FileOutputStream fos = new FileOutputStream(targetFile);
+                 FileChannel inCh = fis.getChannel();
+                 FileChannel outCh = fos.getChannel()) {
+                long size = inCh.size();
+                long pos = 0;
+                while (pos < size) {
+                    long n = inCh.transferTo(pos, size - pos, outCh);
+                    if (n <= 0) break;
+                    pos += n;
                 }
                 success = true;
                 totalSize += targetFile.length();
