@@ -14,19 +14,19 @@
 /Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:252: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
                     String lowerName = name.toLowerCase();
                                             ~~~~~~~~~~~
-/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:470: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
+/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:478: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
                 String filename = file.getName().toLowerCase();
                                                  ~~~~~~~~~~~
-/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:841: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
+/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:855: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
         String name = filename.toLowerCase();
                                ~~~~~~~~~~~
-/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:869: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:883: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
         return String.format("%.1f %s", size / Math.pow(1024, digitGroups), units[digitGroups]);
                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:1085: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
+/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:1099: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
                 if (cmd.toLowerCase().contains(dangerous.toLowerCase())) {
                         ~~~~~~~~~~~
-/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:1085: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
+/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:1099: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
                 if (cmd.toLowerCase().contains(dangerous.toLowerCase())) {
                                                          ~~~~~~~~~~~
 
@@ -45,10 +45,10 @@
 
    https://developer.android.com/reference/java/util/Locale.html#default_locale
 
-/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:1118: Error: Call requires API level 26 (current min is 21): java.lang.Process#waitFor [NewApi]
+/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:1132: Error: Call requires API level 26 (current min is 21): java.lang.Process#waitFor [NewApi]
             boolean finished = process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS);
                                        ~~~~~~~
-/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:1120: Error: Call requires API level 26 (current min is 21): java.lang.Process#destroyForcibly [NewApi]
+/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java:1134: Error: Call requires API level 26 (current min is 21): java.lang.Process#destroyForcibly [NewApi]
                 process.destroyForcibly();
                         ~~~~~~~~~~~~~~~
 

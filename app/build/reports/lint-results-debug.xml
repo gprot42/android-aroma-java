@@ -75,7 +75,7 @@
         errorLine2="                                                 ~~~~~~~~~~~">
         <location
             file="/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java"
-            line="470"
+            line="478"
             column="50"/>
     </issue>
 
@@ -93,7 +93,7 @@
         errorLine2="                               ~~~~~~~~~~~">
         <location
             file="/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java"
-            line="841"
+            line="855"
             column="32"/>
     </issue>
 
@@ -111,7 +111,7 @@
         errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java"
-            line="869"
+            line="883"
             column="16"/>
     </issue>
 
@@ -129,7 +129,7 @@
         errorLine2="                        ~~~~~~~~~~~">
         <location
             file="/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java"
-            line="1085"
+            line="1099"
             column="25"/>
     </issue>
 
@@ -147,7 +147,7 @@
         errorLine2="                                                         ~~~~~~~~~~~">
         <location
             file="/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java"
-            line="1085"
+            line="1099"
             column="58"/>
     </issue>
 
@@ -163,7 +163,7 @@
         errorLine2="                                       ~~~~~~~">
         <location
             file="/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java"
-            line="1118"
+            line="1132"
             column="40"/>
     </issue>
 
@@ -179,7 +179,7 @@
         errorLine2="                        ~~~~~~~~~~~~~~~">
         <location
             file="/Users/aicoder/src/app-aroma-java/app/src/main/java/com/example/aroma/WebServer.java"
-            line="1120"
+            line="1134"
             column="25"/>
     </issue>
 
