@@ -66,6 +66,60 @@ public class WebServer extends NanoHTTPD {
         }
     }
 
+    private String sanitizeStoragePath(String path) {
+        if (path == null) return null;
+        String normalized = path.replace('\\', '/');
+        String[] parts = normalized.split("/");
+        List<String> sanitized = new ArrayList<>();
+        for (String part : parts) {
+            if (part == null || part.isEmpty()) continue;
+            sanitized.add(sanitizeStorageSegment(part));
+        }
+        return String.join("/", sanitized);
+    }
+
+    private String sanitizeStorageSegment(String segment) {
+        StringBuilder out = new StringBuilder();
+        for (int index = 0; index < segment.length(); index++) {
+            char ch = segment.charAt(index);
+            switch (ch) {
+                case '"':
+                    out.append('＂');
+                    break;
+                case '?':
+                    out.append('？');
+                    break;
+                case '*':
+                    out.append('＊');
+                    break;
+                case ':':
+                    out.append('꞉');
+                    break;
+                case '<':
+                    out.append('＜');
+                    break;
+                case '>':
+                    out.append('＞');
+                    break;
+                case '|':
+                    out.append('｜');
+                    break;
+                default:
+                    if (ch < 32) {
+                        out.append('_');
+                    } else {
+                        out.append(ch);
+                    }
+                    break;
+            }
+        }
+        String result = out.toString().trim();
+        if (result.isEmpty() || ".".equals(result) || "..".equals(result)) {
+            return "_";
+        }
+        return result;
+    }
+
     public WebServer(int port, File wwwRoot, Context ctx, String username, String password) {
         super("0.0.0.0", port);
         this.rootDir = wwwRoot;
@@ -144,11 +198,12 @@ public class WebServer extends NanoHTTPD {
             String hdr = session.getHeaders().get("x-upload-path");
             if (hdr != null && !hdr.isEmpty()) {
                 String relPath = decodeUploadPathHeader(hdr);
-                diag("PUT X-Upload-Path='" + hdr + "' decoded='" + relPath + "' len=" + session.getHeaders().get("content-length"));
+                String safeRelPath = sanitizeStoragePath(relPath);
+                diag("PUT X-Upload-Path='" + hdr + "' decoded='" + relPath + "' safe='" + safeRelPath + "' len=" + session.getHeaders().get("content-length"));
                 if (relPath == null || relPath.isEmpty()) {
                     return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Bad X-Upload-Path header");
                 }
-                File target = new File(rootDir, relPath);
+                File target = new File(rootDir, safeRelPath);
                 return handlePut(session, target);
             }
             diag("PUT uri='" + uri + "' len=" + session.getHeaders().get("content-length"));
@@ -532,6 +587,7 @@ public class WebServer extends NanoHTTPD {
         html.append("let activeInput=null;let uploadFiles=[];let addedFolders=[];let pickedFiles=[];let sessionKey='aroma_upload_'+window.location.pathname;");
         html.append("function getUploadedFiles(){try{return JSON.parse(localStorage.getItem(sessionKey))||{}}catch(e){return{}}}");
         html.append("function saveUploadedFile(fname,size){let data=getUploadedFiles();data[fname]={size:size,time:Date.now()};localStorage.setItem(sessionKey,JSON.stringify(data))}");
+        html.append("function addUploadedAlias(originalPath,savedAs,size){if(!savedAs||savedAs===originalPath)return;let data=getUploadedFiles();let entry=data[originalPath]||{size:size,time:Date.now()};entry.size=size||entry.size||0;entry.time=Date.now();data[savedAs]=entry;localStorage.setItem(sessionKey,JSON.stringify(data))}");
         html.append("function clearUploadSession(){localStorage.removeItem(sessionKey)}");
         html.append("function addFolder(){let fi=document.getElementById('folderInput');fi.value='';fi.click()}");
         html.append("function clearSelection(){addedFolders=[];pickedFiles=[];document.getElementById('fileInput').value='';document.getElementById('folderInput').value='';updateFileStatus()}");
@@ -546,8 +602,8 @@ public class WebServer extends NanoHTTPD {
         html.append("async function runUpload(filesIn,overwrite,isRetryPass){if(!filesIn||filesIn.length===0)return{success:0,skipped:0,failed:[]};let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');let pct=document.getElementById('progressPercent');let txt=document.getElementById('progressText');let spd=document.getElementById('progressSpeed');btn.disabled=true;btn.textContent=isRetryPass?'Retrying...':'Uploading...';prog.style.display='block';let uploaded=getUploadedFiles();let filesToUpload=isRetryPass?filesIn.slice():filesIn.filter(f=>{let fn=f.webkitRelativePath||f.name;return!uploaded[fn]||uploaded[fn].size!==f.size});let skippedPrev=isRetryPass?0:(filesIn.length-filesToUpload.length);let totalFiles=filesToUpload.length;let totalBytes=filesToUpload.reduce((a,f)=>a+f.size,0);let concurrency=totalBytes>=LARGE_UPLOAD_BYTES?LARGE_UPLOAD_CONCURRENCY:DEFAULT_CONCURRENCY;let uploadedBytes=0;let uploadedFiles=0;let success=0;let skipped=0;let failed=[];let queue=filesToUpload.map(f=>({file:f,attempt:0}));let startTime=Date.now();function updateProgress(){let p=totalBytes>0?(uploadedBytes/totalBytes*100):0;bar.style.width=p+'%';pct.textContent=Math.round(p)+'%';txt.textContent=uploadedFiles+' / '+totalFiles+' files ('+formatSize(uploadedBytes)+' / '+formatSize(totalBytes)+')';let elapsed=(Date.now()-startTime)/1000;let speed=elapsed>0?uploadedBytes/elapsed:0;spd.textContent='Speed: '+formatSize(speed)+'/s'+(skippedPrev>0?' | Resumed: '+skippedPrev+' skipped':'')+(isRetryPass?' | Retrying failed items':'')+' | Parallel: '+concurrency}");
         html.append("function encodePathSegment(p){return p.split('/').map(s=>encodeURIComponent(s)).join('/')}");
         html.append("function b64UploadPath(s){return btoa(unescape(encodeURIComponent(s)))}");
-        html.append("function uploadOnce(file,forceOverwrite,usePut){return new Promise((resolve)=>{let fname=file.webkitRelativePath||file.name;let xhr=new XMLHttpRequest();xhr.timeout=600000;let attemptBytes=0;xhr.upload.onprogress=function(e){if(e.lengthComputable){let delta=e.loaded-attemptBytes;attemptBytes=e.loaded;uploadedBytes+=delta;updateProgress()}};xhr.onload=function(){activeXhrs.delete(xhr);if(xhr.status>=200&&xhr.status<300){resolve({ok:true,status:xhr.status})}else if(xhr.responseText&&xhr.responseText.includes('already exists')){uploadedBytes-=attemptBytes;resolve({ok:true,status:xhr.status,alreadyExists:true})}else{uploadedBytes-=attemptBytes;let reason='HTTP '+xhr.status;let raw=(xhr.responseText||'').replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ').trim();if(usePut){if(raw)reason='HTTP '+xhr.status+': '+raw.substring(0,200)}else{let t=raw.toLowerCase();if(t.includes('permission denied'))reason='Permission denied';else if(t.includes('cannot create directory'))reason='Cannot create directory';else if(t.includes('temp file'))reason='Temp file error';else if(t.includes('no space')||t.includes('enospc'))reason='Storage full (no space)';else if(raw&&raw.length<200)reason='HTTP '+xhr.status+': '+raw}resolve({ok:false,status:xhr.status,reason:reason})}};xhr.onerror=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Network error (check /_aroma_diag on server for details)'})};xhr.ontimeout=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:408,reason:'Request timed out after 10min'})};xhr.onabort=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Aborted',aborted:true})};if(usePut){let base=window.location.pathname;if(!base.endsWith('/'))base+='/';xhr.open('PUT',base+'_aroma_put');xhr.setRequestHeader('Content-Type','application/octet-stream');xhr.setRequestHeader('X-Upload-Path',b64UploadPath(fname));activeXhrs.add(xhr);xhr.send(file)}else{let fd=new FormData();fd.append('uploadedFile',file,fname);fd.append('originalPath',fname);if(overwrite||forceOverwrite)fd.append('overwrite','true');xhr.open('POST',window.location.pathname);activeXhrs.add(xhr);xhr.send(fd)}})}");
-        html.append("async function uploadWithRetry(file){let fname=file.webkitRelativePath||file.name;let lastReason='Unknown';for(let attempt=0;attempt<=MAX_RETRIES;attempt++){if(uploadCancelled)return{ok:false,reason:'Cancelled',fatal:true};let usePut=isRetryPass||attempt>=2;let r=await uploadOnce(file,isRetryPass||attempt>0,usePut);if(r.aborted||uploadCancelled)return{ok:false,reason:'Cancelled',fatal:true};if(r.ok){if(r.alreadyExists){skipped++}else{success++;saveUploadedFile(fname,file.size)}return{ok:true}}lastReason=r.reason;if(!isRetryable(r.status)){return{ok:false,reason:lastReason,fatal:true}}if(attempt<MAX_RETRIES){let d=RETRY_DELAYS[Math.min(attempt,RETRY_DELAYS.length-1)];await sleep(d)}}return{ok:false,reason:lastReason+' (after '+MAX_RETRIES+' retries)',fatal:false}}");
+        html.append("function uploadOnce(file,forceOverwrite,usePut){return new Promise((resolve)=>{let fname=file.webkitRelativePath||file.name;let xhr=new XMLHttpRequest();xhr.timeout=600000;let attemptBytes=0;xhr.upload.onprogress=function(e){if(e.lengthComputable){let delta=e.loaded-attemptBytes;attemptBytes=e.loaded;uploadedBytes+=delta;updateProgress()}};xhr.onload=function(){activeXhrs.delete(xhr);if(xhr.status>=200&&xhr.status<300){let alias=xhr.getResponseHeader('X-Aroma-Saved-As');resolve({ok:true,status:xhr.status,savedAs:alias})}else if(xhr.responseText&&xhr.responseText.includes('already exists')){uploadedBytes-=attemptBytes;resolve({ok:true,status:xhr.status,alreadyExists:true})}else{uploadedBytes-=attemptBytes;let reason='HTTP '+xhr.status;let raw=(xhr.responseText||'').replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ').trim();if(usePut){if(raw)reason='HTTP '+xhr.status+': '+raw.substring(0,200)}else{let t=raw.toLowerCase();if(t.includes('permission denied'))reason='Permission denied';else if(t.includes('cannot create directory'))reason='Cannot create directory';else if(t.includes('temp file'))reason='Temp file error';else if(t.includes('no space')||t.includes('enospc'))reason='Storage full (no space)';else if(raw&&raw.length<200)reason='HTTP '+xhr.status+': '+raw}resolve({ok:false,status:xhr.status,reason:reason})}};xhr.onerror=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Network error (check /_aroma_diag on server for details)'})};xhr.ontimeout=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:408,reason:'Request timed out after 10min'})};xhr.onabort=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Aborted',aborted:true})};if(usePut){let base=window.location.pathname;if(!base.endsWith('/'))base+='/';xhr.open('PUT',base+'_aroma_put');xhr.setRequestHeader('Content-Type','application/octet-stream');xhr.setRequestHeader('X-Upload-Path',b64UploadPath(fname));activeXhrs.add(xhr);xhr.send(file)}else{let fd=new FormData();fd.append('uploadedFile',file,fname);fd.append('originalPath',fname);if(overwrite||forceOverwrite)fd.append('overwrite','true');xhr.open('POST',window.location.pathname);activeXhrs.add(xhr);xhr.send(fd)}})}");
+        html.append("async function uploadWithRetry(file){let fname=file.webkitRelativePath||file.name;let lastReason='Unknown';for(let attempt=0;attempt<=MAX_RETRIES;attempt++){if(uploadCancelled)return{ok:false,reason:'Cancelled',fatal:true};let usePut=isRetryPass||attempt>=2;let r=await uploadOnce(file,isRetryPass||attempt>0,usePut);if(r.aborted||uploadCancelled)return{ok:false,reason:'Cancelled',fatal:true};if(r.ok){if(r.alreadyExists){skipped++}else{success++;saveUploadedFile(fname,file.size);if(r.savedAs&&r.savedAs!==fname){addUploadedAlias(fname,r.savedAs,file.size)}}return{ok:true}}lastReason=r.reason;if(!isRetryable(r.status)){return{ok:false,reason:lastReason,fatal:true}}if(attempt<MAX_RETRIES){let d=RETRY_DELAYS[Math.min(attempt,RETRY_DELAYS.length-1)];await sleep(d)}}return{ok:false,reason:lastReason+' (after '+MAX_RETRIES+' retries)',fatal:false}}");
         html.append("async function worker(){while(queue.length>0){if(uploadCancelled)break;let item=queue.shift();if(!item)continue;let r=await uploadWithRetry(item.file);if(!r.ok&&r.reason!=='Cancelled'){failed.push({file:item.file,name:item.file.webkitRelativePath||item.file.name,reason:r.reason})}uploadedFiles++;updateProgress()}}");
         html.append("if(totalFiles===0){btn.textContent='Upload';btn.disabled=false;prog.style.display='none';if(!isRetryPass)alert('All '+skippedPrev+' files already uploaded!');return{success:0,skipped:skippedPrev,failed:[]}}");
         html.append("let workers=[];for(let i=0;i<concurrency;i++)workers.push(worker());await Promise.all(workers);return{success:success,skipped:skipped+skippedPrev,failed:failed}}");
@@ -835,6 +891,10 @@ public class WebServer extends NanoHTTPD {
             long dt = System.currentTimeMillis() - t0;
             diag("PUT OK " + label + " " + written + "B in " + dt + "ms");
             Response response = newFixedLengthResponse(existed ? Response.Status.OK : Response.Status.CREATED, "text/plain", "");
+            String relativeSavedPath = rootDir.toURI().relativize(currentFile.toURI()).getPath();
+            if (relativeSavedPath != null && !relativeSavedPath.isEmpty()) {
+                response.addHeader("X-Aroma-Saved-As", relativeSavedPath);
+            }
             addWebDavHeaders(response);
             return response;
         } catch (Exception e) {
@@ -1198,8 +1258,13 @@ public class WebServer extends NanoHTTPD {
                 continue;
             }
             
+            String safeTargetPath = sanitizeStoragePath(targetPath);
+            if (!targetPath.equals(safeTargetPath)) {
+                diag("POST sanitized path '" + targetPath + "' -> '" + safeTargetPath + "'");
+            }
+
             File tempFile = new File(tempLocation);
-            File targetFile = new File(currentDir, targetPath);
+            File targetFile = new File(currentDir, safeTargetPath);
             
             // Create parent directories for folder uploads
             File parentDir = targetFile.getParentFile();
@@ -1268,7 +1333,7 @@ public class WebServer extends NanoHTTPD {
             }
             
             if (success) {
-                uploadedFileNames.add(originalName);
+                uploadedFileNames.add(targetPath.equals(safeTargetPath) ? originalName : originalName + " → " + safeTargetPath);
                 if (eventListener != null) {
                     eventListener.onFileUploaded(originalName, getClientIp(session));
                 }
