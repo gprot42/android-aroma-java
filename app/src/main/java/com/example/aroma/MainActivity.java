@@ -62,6 +62,7 @@ public class MainActivity extends Activity implements ServerEventListener {
 
     private Button toggleButton;
     private Button qrButton;
+    private Button debugButton;
     private Button settingsButton;
     private Button hotspotButton;
     private Button hotspotQrButton;
@@ -122,6 +123,7 @@ public class MainActivity extends Activity implements ServerEventListener {
 
         toggleButton = findViewById(R.id.toggle_button);
         qrButton = findViewById(R.id.qr_button);
+        debugButton = findViewById(R.id.debug_button);
         settingsButton = findViewById(R.id.settings_button);
         statusIndicator = findViewById(R.id.status_indicator);
         hotspotActions = findViewById(R.id.hotspot_actions);
@@ -206,6 +208,7 @@ public class MainActivity extends Activity implements ServerEventListener {
         
         settingsButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(panelColor));
         qrButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(panelColor));
+        debugButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(panelColor));
     }
 
     private void requestPermissions() {
@@ -486,6 +489,7 @@ public class MainActivity extends Activity implements ServerEventListener {
 
         toggleButton.setOnClickListener(v -> toggleServer());
         qrButton.setOnClickListener(v -> toggleQrCode());
+        debugButton.setOnClickListener(v -> openDiagnostics());
         settingsButton.setOnClickListener(v -> openSettings());
         hotspotButton.setOnClickListener(v -> toggleHotspot());
         hotspotQrButton.setOnClickListener(v -> toggleHotspotQr());
@@ -552,6 +556,8 @@ public class MainActivity extends Activity implements ServerEventListener {
             toggleButton.setText(R.string.start_server);
             qrButton.setEnabled(false);
             qrButton.setVisibility(View.GONE);
+            debugButton.setEnabled(false);
+            debugButton.setVisibility(View.GONE);
             qrImageView.setVisibility(View.GONE);
             statusLabel.setText(R.string.server_not_running);
             statusLabel.setTextColor(0xFF888888);
@@ -573,6 +579,8 @@ public class MainActivity extends Activity implements ServerEventListener {
             statusIndicator.setBackgroundResource(R.drawable.status_dot_online);
             qrButton.setEnabled(true);
             qrButton.setVisibility(View.VISIBLE);
+            debugButton.setEnabled(true);
+            debugButton.setVisibility(View.VISIBLE);
 
             String url = serverService.getCurrentUrl();
             urlText.setText("Local: " + url);
@@ -593,6 +601,8 @@ public class MainActivity extends Activity implements ServerEventListener {
             statusIndicator.setBackgroundResource(R.drawable.status_dot_offline);
             qrButton.setEnabled(false);
             qrButton.setVisibility(View.GONE);
+            debugButton.setEnabled(false);
+            debugButton.setVisibility(View.GONE);
             qrImageView.setVisibility(View.GONE);
             urlText.setVisibility(View.GONE);
             publicUrlText.setVisibility(View.GONE);
@@ -643,6 +653,25 @@ public class MainActivity extends Activity implements ServerEventListener {
 
     private void openSettings() {
         startActivity(new Intent(this, SettingsActivity.class));
+    }
+
+    private void openDiagnostics() {
+        if (!serviceBound || serverService == null || !serverService.isServerRunning()) {
+            Toast.makeText(this, "Start the server first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String baseUrl = serverService.getCurrentUrl();
+        if (baseUrl == null || baseUrl.isEmpty()) {
+            Toast.makeText(this, "Diagnostics URL unavailable", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String diagnosticsUrl = baseUrl + "/_aroma_diag";
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(diagnosticsUrl)));
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to open diagnostics: " + e.getMessage());
+            Toast.makeText(this, diagnosticsUrl, Toast.LENGTH_LONG).show();
+        }
     }
 
     private File getStorageDir() {
