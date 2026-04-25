@@ -47,7 +47,9 @@ public class SettingsActivity extends Activity {
         folderSpinner = findViewById(R.id.folder_spinner);
         themeSpinner = findViewById(R.id.theme_spinner);
         showPasswordButton = findViewById(R.id.show_password_button);
+        TextView versionText = findViewById(R.id.version_text);
         Button saveButton = findViewById(R.id.save_button);
+        versionText.setText(getString(R.string.app_version_format, BuildConfig.APP_VERSION));
 
         setupSpinners();
         loadSettings();
