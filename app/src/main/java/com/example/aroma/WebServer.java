@@ -184,11 +184,20 @@ public class WebServer extends NanoHTTPD {
         if (uri.isEmpty() || uri.equals("/")) uri = "/";
         Method method = session.getMethod();
 
-        // Diagnostic endpoint (no file system access, safe to call from browser)
+        // Diagnostic endpoint
         if (uri.equals("/_aroma_diag") && method == Method.GET) {
+            String pageTs = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date());
             StringBuilder body = new StringBuilder();
-            for (String line : DIAG_LOG) body.append(line).append('\n');
-            return newFixedLengthResponse(Response.Status.OK, "text/plain; charset=utf-8", body.toString());
+            body.append("AROMA diagnostics — ").append(pageTs).append("\n");
+            body.append("============================================================\n\n");
+            if (DIAG_LOG.isEmpty()) {
+                body.append("(no events yet)\n");
+            } else {
+                for (String line : DIAG_LOG) body.append(line).append('\n');
+            }
+            Response resp = newFixedLengthResponse(Response.Status.OK, "text/plain; charset=utf-8", body.toString());
+            resp.addHeader("Cache-Control", "no-store");
+            return resp;
         }
 
         // Header-based PUT upload: any request with X-Upload-Path targets
@@ -549,7 +558,23 @@ public class WebServer extends NanoHTTPD {
         html.append("<p>AROMA is an Android app that turns your device into a file server.</p>");
         
         html.append("</div></div>");
-        
+
+        // Upload Failure / Summary Modal
+        html.append("<div id='uploadFailureModal' class='modal' onclick='if(event.target===this)hideModal(\"uploadFailureModal\")'>");
+        html.append("<div class='modal-content' style='max-width:720px'>");
+        html.append("<button class='close-btn' onclick='hideModal(\"uploadFailureModal\")'>&times;</button>");
+        html.append("<h2 id='uploadFailureTitle'>Upload Summary</h2>");
+        html.append("<div id='uploadFailureStats' style='margin:8px 0 12px 0;font-size:0.95em'></div>");
+        html.append("<div id='uploadFailureHint' style='margin:8px 0 12px 0;padding:10px 12px;background:var(--code-bg);border-radius:6px;font-size:0.88em;color:var(--meta);display:none'></div>");
+        html.append("<div id='uploadFailureList' style='max-height:280px;overflow-y:auto;background:var(--code-bg);border-radius:6px;padding:10px;font-size:0.85em;font-family:monospace;white-space:pre-wrap;word-break:break-all;display:none'></div>");
+        html.append("<div style='margin-top:16px;display:flex;flex-wrap:wrap;gap:8px'>");
+        html.append("<a id='uploadFailureDiagLink' class='btn btn-primary' target='_blank' rel='noopener' style='text-decoration:none'>View Diagnostics</a>");
+        html.append("<button id='uploadFailureRetryBtn' class='btn btn-primary' style='background:#ff9800;display:none' onclick='hideModal(\"uploadFailureModal\");retryFailed()'>Retry Failed</button>");
+        html.append("<button id='uploadFailureCopyBtn' class='btn btn-primary' style='display:none' onclick='copyFailureList()'>Copy Failures</button>");
+        html.append("<button class='btn btn-primary' style='background:#555' onclick='hideModal(\"uploadFailureModal\")'>Close</button>");
+        html.append("</div>");
+        html.append("</div></div>");
+
         // JavaScript
         html.append("<script>");
         html.append("let currentItem={name:'',isDir:false,link:''};");
@@ -602,7 +627,7 @@ public class WebServer extends NanoHTTPD {
         html.append("async function runUpload(filesIn,overwrite,isRetryPass){if(!filesIn||filesIn.length===0)return{success:0,skipped:0,failed:[]};let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');let pct=document.getElementById('progressPercent');let txt=document.getElementById('progressText');let spd=document.getElementById('progressSpeed');btn.disabled=true;btn.textContent=isRetryPass?'Retrying...':'Uploading...';prog.style.display='block';let uploaded=getUploadedFiles();let filesToUpload=isRetryPass?filesIn.slice():filesIn.filter(f=>{let fn=f.webkitRelativePath||f.name;return!uploaded[fn]||uploaded[fn].size!==f.size});let skippedPrev=isRetryPass?0:(filesIn.length-filesToUpload.length);let totalFiles=filesToUpload.length;let totalBytes=filesToUpload.reduce((a,f)=>a+f.size,0);let concurrency=totalBytes>=LARGE_UPLOAD_BYTES?LARGE_UPLOAD_CONCURRENCY:DEFAULT_CONCURRENCY;let uploadedBytes=0;let uploadedFiles=0;let success=0;let skipped=0;let failed=[];let queue=filesToUpload.map(f=>({file:f,attempt:0}));let startTime=Date.now();function updateProgress(){let p=totalBytes>0?(uploadedBytes/totalBytes*100):0;bar.style.width=p+'%';pct.textContent=Math.round(p)+'%';txt.textContent=uploadedFiles+' / '+totalFiles+' files ('+formatSize(uploadedBytes)+' / '+formatSize(totalBytes)+')';let elapsed=(Date.now()-startTime)/1000;let speed=elapsed>0?uploadedBytes/elapsed:0;spd.textContent='Speed: '+formatSize(speed)+'/s'+(skippedPrev>0?' | Resumed: '+skippedPrev+' skipped':'')+(isRetryPass?' | Retrying failed items':'')+' | Parallel: '+concurrency}");
         html.append("function encodePathSegment(p){return p.split('/').map(s=>encodeURIComponent(s)).join('/')}");
         html.append("function b64UploadPath(s){return btoa(unescape(encodeURIComponent(s)))}");
-        html.append("function uploadOnce(file,forceOverwrite,usePut){return new Promise((resolve)=>{let fname=file.webkitRelativePath||file.name;let xhr=new XMLHttpRequest();xhr.timeout=600000;let attemptBytes=0;xhr.upload.onprogress=function(e){if(e.lengthComputable){let delta=e.loaded-attemptBytes;attemptBytes=e.loaded;uploadedBytes+=delta;updateProgress()}};xhr.onload=function(){activeXhrs.delete(xhr);if(xhr.status>=200&&xhr.status<300){let alias=xhr.getResponseHeader('X-Aroma-Saved-As');resolve({ok:true,status:xhr.status,savedAs:alias})}else if(xhr.responseText&&xhr.responseText.includes('already exists')){uploadedBytes-=attemptBytes;resolve({ok:true,status:xhr.status,alreadyExists:true})}else{uploadedBytes-=attemptBytes;let reason='HTTP '+xhr.status;let raw=(xhr.responseText||'').replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ').trim();if(usePut){if(raw)reason='HTTP '+xhr.status+': '+raw.substring(0,200)}else{let t=raw.toLowerCase();if(t.includes('permission denied'))reason='Permission denied';else if(t.includes('cannot create directory'))reason='Cannot create directory';else if(t.includes('temp file'))reason='Temp file error';else if(t.includes('no space')||t.includes('enospc'))reason='Storage full (no space)';else if(raw&&raw.length<200)reason='HTTP '+xhr.status+': '+raw}resolve({ok:false,status:xhr.status,reason:reason})}};xhr.onerror=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Network error (check /_aroma_diag on server for details)'})};xhr.ontimeout=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:408,reason:'Request timed out after 10min'})};xhr.onabort=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Aborted',aborted:true})};if(usePut){let base=window.location.pathname;if(!base.endsWith('/'))base+='/';xhr.open('PUT',base+'_aroma_put');xhr.setRequestHeader('Content-Type','application/octet-stream');xhr.setRequestHeader('X-Upload-Path',b64UploadPath(fname));activeXhrs.add(xhr);xhr.send(file)}else{let fd=new FormData();fd.append('uploadedFile',file,fname);fd.append('originalPath',fname);if(overwrite||forceOverwrite)fd.append('overwrite','true');xhr.open('POST',window.location.pathname);activeXhrs.add(xhr);xhr.send(fd)}})}");
+        html.append("function uploadOnce(file,forceOverwrite,usePut){return new Promise((resolve)=>{let fname=file.webkitRelativePath||file.name;let xhr=new XMLHttpRequest();xhr.timeout=600000;let attemptBytes=0;xhr.upload.onprogress=function(e){if(e.lengthComputable){let delta=e.loaded-attemptBytes;attemptBytes=e.loaded;uploadedBytes+=delta;updateProgress()}};xhr.onload=function(){activeXhrs.delete(xhr);if(xhr.status>=200&&xhr.status<300){let alias=xhr.getResponseHeader('X-Aroma-Saved-As');resolve({ok:true,status:xhr.status,savedAs:alias})}else if(xhr.responseText&&xhr.responseText.includes('already exists')){uploadedBytes-=attemptBytes;resolve({ok:true,status:xhr.status,alreadyExists:true})}else{uploadedBytes-=attemptBytes;let reason='HTTP '+xhr.status;let raw=(xhr.responseText||'').replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ').trim();if(usePut){if(raw)reason='HTTP '+xhr.status+': '+raw.substring(0,200)}else{let t=raw.toLowerCase();if(t.includes('permission denied'))reason='Permission denied';else if(t.includes('cannot create directory'))reason='Cannot create directory';else if(t.includes('temp file'))reason='Temp file error';else if(t.includes('no space')||t.includes('enospc'))reason='Storage full (no space)';else if(raw&&raw.length<200)reason='HTTP '+xhr.status+': '+raw}resolve({ok:false,status:xhr.status,reason:reason})}};xhr.onerror=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;let diagUrl=window.location.origin+'/_aroma_diag';resolve({ok:false,status:0,reason:'Server write failed (EPERM/disk) — see '+diagUrl})};xhr.ontimeout=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:408,reason:'Request timed out after 10min'})};xhr.onabort=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Aborted',aborted:true})};if(usePut){let base=window.location.pathname;if(!base.endsWith('/'))base+='/';xhr.open('PUT',base+'_aroma_put');xhr.setRequestHeader('Content-Type','application/octet-stream');xhr.setRequestHeader('X-Upload-Path',b64UploadPath(fname));activeXhrs.add(xhr);xhr.send(file)}else{let fd=new FormData();fd.append('uploadedFile',file,fname);fd.append('originalPath',fname);if(overwrite||forceOverwrite)fd.append('overwrite','true');xhr.open('POST',window.location.pathname);activeXhrs.add(xhr);xhr.send(fd)}})}");
         html.append("async function uploadWithRetry(file){let fname=file.webkitRelativePath||file.name;let lastReason='Unknown';for(let attempt=0;attempt<=MAX_RETRIES;attempt++){if(uploadCancelled)return{ok:false,reason:'Cancelled',fatal:true};let usePut=isRetryPass||attempt>=2;let r=await uploadOnce(file,isRetryPass||attempt>0,usePut);if(r.aborted||uploadCancelled)return{ok:false,reason:'Cancelled',fatal:true};if(r.ok){if(r.alreadyExists){skipped++}else{success++;saveUploadedFile(fname,file.size);if(r.savedAs&&r.savedAs!==fname){addUploadedAlias(fname,r.savedAs,file.size)}}return{ok:true}}lastReason=r.reason;if(!isRetryable(r.status)){return{ok:false,reason:lastReason,fatal:true}}if(attempt<MAX_RETRIES){let d=RETRY_DELAYS[Math.min(attempt,RETRY_DELAYS.length-1)];await sleep(d)}}return{ok:false,reason:lastReason+' (after '+MAX_RETRIES+' retries)',fatal:false}}");
         html.append("async function worker(){while(queue.length>0){if(uploadCancelled)break;let item=queue.shift();if(!item)continue;let r=await uploadWithRetry(item.file);if(!r.ok&&r.reason!=='Cancelled'){failed.push({file:item.file,name:item.file.webkitRelativePath||item.file.name,reason:r.reason})}uploadedFiles++;updateProgress()}}");
         html.append("if(totalFiles===0){btn.textContent='Upload';btn.disabled=false;prog.style.display='none';if(!isRetryPass)alert('All '+skippedPrev+' files already uploaded!');return{success:0,skipped:skippedPrev,failed:[]}}");
@@ -611,7 +636,9 @@ public class WebServer extends NanoHTTPD {
         html.append("function setStopButtonVisible(v){let b=document.getElementById('stopUploadBtn');if(b)b.style.display=v?'inline-block':'none';if(b){b.disabled=false;b.textContent='Stop Upload'}}");
         html.append("function stopUpload(){if(!isUploading)return;if(!confirm('Stop the current upload? In-flight files will be cancelled.'))return;uploadCancelled=true;let b=document.getElementById('stopUploadBtn');if(b){b.disabled=true;b.textContent='Stopping...'}activeXhrs.forEach(x=>{try{x.abort()}catch(e){}});activeXhrs.clear()}");
         html.append("async function retryFailed(){if(pendingFailures.length===0||isUploading)return;uploadCancelled=false;isUploading=true;setStopButtonVisible(true);let files=pendingFailures.map(f=>f.file);pendingFailures=[];updateRetryButton();let res=await runUpload(files,true,true);finalizeUpload(res,true)}");
-        html.append("function finalizeUpload(res,wasRetry){isUploading=false;setStopButtonVisible(false);let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');btn.textContent='Upload';btn.disabled=uploadFiles.length===0;prog.style.display='none';bar.style.width='0%';pendingFailures=res.failed||[];updateRetryButton();let msg=(uploadCancelled?'Upload stopped\\n':(wasRetry?'Retry pass complete\\n':''))+'Uploaded: '+res.success;if(res.skipped>0)msg+='\\nSkipped/resumed: '+res.skipped;if(pendingFailures.length>0){msg+='\\nStill failing: '+pendingFailures.length+'\\n';pendingFailures.forEach(f=>{msg+='\\n  '+f.name+'\\n    Reason: '+f.reason+'\\n'});msg+='\\nClick \"Retry '+pendingFailures.length+' Failed\" to try again.'}alert(msg);uploadCancelled=false;if(pendingFailures.length===0&&!wasRetry&&res.success+res.skipped>0){clearUploadSession();history.replaceState(null,'',window.location.pathname);let a=document.createElement('a');a.href=window.location.pathname;document.body.appendChild(a);a.click()}}");
+        html.append("function showUploadSummary(res,wasRetry,diagUrl){let titleEl=document.getElementById('uploadFailureTitle');let statsEl=document.getElementById('uploadFailureStats');let hintEl=document.getElementById('uploadFailureHint');let listEl=document.getElementById('uploadFailureList');let retryBtn=document.getElementById('uploadFailureRetryBtn');let copyBtn=document.getElementById('uploadFailureCopyBtn');let diagA=document.getElementById('uploadFailureDiagLink');diagA.href=diagUrl;let fails=res.failed||[];let permErr=fails.some(f=>/EPERM|Permission|permitted|disk/i.test(f.reason||''));let netErr=fails.some(f=>/Server write failed|Network|HTTP 0/i.test(f.reason||''));titleEl.textContent=uploadCancelled?'Upload Stopped':(fails.length>0?'Upload Finished With Errors':(wasRetry?'Retry Complete':'Upload Complete'));let stats='<b>Uploaded:</b> '+res.success;if(res.skipped>0)stats+=' &nbsp; <b>Skipped/resumed:</b> '+res.skipped;if(fails.length>0)stats+=' &nbsp; <b style=\"color:#ff6b6b\">Failed:</b> '+fails.length;statsEl.innerHTML=stats;if(fails.length>0){let hintParts=[];if(permErr)hintParts.push('Server refused to write one or more files (EPERM). The app will try to sanitize illegal filename characters on retry.');if(netErr)hintParts.push('Server returned an error before the HTTP response completed. Open the Diagnostics link for the exact server-side reason.');if(hintParts.length===0)hintParts.push('Open the Diagnostics link on the right for server-side details.');hintEl.innerHTML=hintParts.map(function(p){return'&bull; '+p}).join('<br>');hintEl.style.display='block';let txt=fails.map(function(f){return'• '+f.name+'\\n    '+f.reason}).join('\\n\\n');listEl.textContent=txt;listEl.style.display='block';retryBtn.style.display='inline-block';retryBtn.textContent='Retry '+fails.length+' Failed';copyBtn.style.display='inline-block';window._lastFailureText=txt}else{hintEl.style.display='none';listEl.style.display='none';retryBtn.style.display='none';copyBtn.style.display='none';window._lastFailureText=''}showModal('uploadFailureModal')}");
+        html.append("function copyFailureList(){let t=window._lastFailureText||'';if(!t)return;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){let b=document.getElementById('uploadFailureCopyBtn');if(b){let o=b.textContent;b.textContent='Copied!';setTimeout(function(){b.textContent=o},1500)}})}else{let ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta)}}");
+        html.append("function finalizeUpload(res,wasRetry){isUploading=false;setStopButtonVisible(false);let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');btn.textContent='Upload';btn.disabled=uploadFiles.length===0;prog.style.display='none';bar.style.width='0%';pendingFailures=res.failed||[];updateRetryButton();let diagUrl=window.location.origin+'/_aroma_diag';showUploadSummary(res,wasRetry,diagUrl);uploadCancelled=false;if(pendingFailures.length===0&&!wasRetry&&res.success+res.skipped>0){clearUploadSession();setTimeout(function(){history.replaceState(null,'',window.location.pathname);let a=document.createElement('a');a.href=window.location.pathname;document.body.appendChild(a);a.click()},800)}}");
         html.append("async function startUpload(){if(uploadFiles.length===0||isUploading)return;document.body.dataset.allowNavigate='false';uploadCancelled=false;isUploading=true;pendingFailures=[];updateRetryButton();setStopButtonVisible(true);let overwrite=document.getElementById('overwriteCheck').checked;let res=await runUpload(uploadFiles,overwrite,false);if(!uploadCancelled&&res.failed&&res.failed.length>0){let pass2=await runUpload(res.failed.map(f=>f.file),true,true);res.success+=pass2.success;res.skipped+=pass2.skipped;res.failed=pass2.failed}finalizeUpload(res,false)}");
         html.append("document.addEventListener('click',function(e){let anchor=e.target.closest('a');if(!anchor)return;let href=anchor.getAttribute('href');if(!href||href.startsWith('#')||anchor.target==='_blank')return;if(isUploading){e.preventDefault();window.open(anchor.href,'_blank')}},true);");
         html.append("document.querySelector('.file-list').addEventListener('contextmenu',function(e){if(e.target===this||e.target.classList.contains('empty')){showEmptyContextMenu(e)}});");
@@ -905,6 +932,31 @@ public class WebServer extends NanoHTTPD {
             if (currentFile.exists()) {
                 try { currentFile.delete(); } catch (Exception ignored) {}
             }
+            // Drain remaining body so NanoHTTPD can send the error response cleanly
+            // (without this, the connection is closed mid-stream and the browser
+            // sees onerror instead of the 500 status + message text).
+            // Cap is generous to cover multi-hundred-MB files but not unbounded.
+            try {
+                long drainCap = 256L * 1024L * 1024L; // 256 MB hard cap
+                long lenHeader2 = -1;
+                String lh2 = session.getHeaders().get("content-length");
+                if (lh2 != null) {
+                    try { lenHeader2 = Long.parseLong(lh2.trim()); } catch (NumberFormatException ignored) {}
+                }
+                if (lenHeader2 > 0 && lenHeader2 < drainCap) drainCap = lenHeader2;
+                InputStream drain = session.getInputStream();
+                byte[] dbuf = new byte[64 * 1024];
+                long drained = 0;
+                while (drained < drainCap) {
+                    int toRead = dbuf.length;
+                    long remaining = drainCap - drained;
+                    if (remaining < toRead) toRead = (int) remaining;
+                    int n = drain.read(dbuf, 0, toRead);
+                    if (n <= 0) break;
+                    drained += n;
+                }
+                if (drained > 0) diag("PUT drained " + drained + "B after failure for " + label);
+            } catch (Throwable ignore) {}
             Response response = newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", msg);
             addWebDavHeaders(response);
             return response;
