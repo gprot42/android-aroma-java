@@ -760,6 +760,7 @@ id chronometer
 id collapseActionView
 id content
 id contentPanel
+id copy_password_button
 id credentials_label
 id credentials_note
 id custom
@@ -771,10 +772,13 @@ id dialog_button
 id disableHome
 id edit_query
 id edit_text_id
+id enable_hotspot_checkbox
 id end
 id expand_activities_button
 id expanded_menu
 id file_list
+id flyingcarpet_note
+id flyingcarpet_text
 id folder_label
 id folder_path
 id folder_spinner
@@ -784,6 +788,10 @@ id group_divider
 id hide_ime_id
 id home
 id homeAsUp
+id hotspot_actions
+id hotspot_button
+id hotspot_info
+id hotspot_qr_button
 id icon
 id icon_group
 id ifRoom
@@ -796,6 +804,7 @@ id line1
 id line3
 id listMode
 id list_item
+id mac_transfer_text
 id message
 id middle
 id multiply
@@ -986,6 +995,7 @@ string abc_shareactionprovider_share_with
 string abc_shareactionprovider_share_with_application
 string abc_toolbar_collapse_description
 string about_section
+string airdrop_mode_hint
 string androidx_startup
 string app_description
 string app_name
@@ -999,16 +1009,27 @@ string call_notification_hang_up_action
 string call_notification_incoming_text
 string call_notification_ongoing_text
 string call_notification_screening_text
+string copy_password
 string credentials_empty_error
 string credentials_note
 string credentials_saved
 string credentials_section
+string enable_hotspot_mode
 string enter_ngrok_authtoken
 string enter_ngrok_token_prompt
 string failed_to_start_server
 string failed_to_start_tunnel
+string flyingcarpet_hint
+string flyingcarpet_settings_note
 string folder_section
 string hide
+string hide_hotspot_qr
+string hotspot_permission_needed
+string hotspot_start
+string hotspot_starting
+string hotspot_stop
+string hotspot_stopped
+string password_copied
 string password_hint
 string port_invalid_error
 string port_label
@@ -1026,7 +1047,10 @@ string server_stopped
 string settings
 string settings_saved
 string settings_title
+string share_file
+string share_imported
 string show
+string show_hotspot_qr
 string show_qr
 string start_server
 string status_bar_notification_info_overflow
@@ -1439,3 +1463,4 @@ styleable Toolbar android_gravity android_minHeight buttonGravity collapseConten
 styleable View android_theme android_focusable paddingEnd paddingStart theme
 styleable ViewBackgroundHelper android_background backgroundTint backgroundTintMode
 styleable ViewStubCompat android_id android_layout android_inflatedId
+xml file_paths

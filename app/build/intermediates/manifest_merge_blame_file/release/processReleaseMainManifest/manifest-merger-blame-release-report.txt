@@ -1,8 +1,8 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
 3    package="com.example.aroma"
-4    android:versionCode="8"
-5    android:versionName="0.0.8" >
+4    android:versionCode="15"
+5    android:versionName="0.0.15" >
 6
 7    <uses-sdk
 8        android:minSdkVersion="21"
@@ -14,162 +14,218 @@
 12    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 12-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:6:5-76
 12-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:6:22-73
-13    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-13-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:7:5-79
-13-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:7:22-76
-14    <uses-permission
-14-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:8:5-107
-15        android:name="android.permission.READ_EXTERNAL_STORAGE"
-15-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:8:22-77
-16        android:maxSdkVersion="32" />
-16-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:8:78-104
-17    <uses-permission
-17-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:9:5-108
-18        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-18-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:9:22-78
-19        android:maxSdkVersion="32" />
-19-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:9:79-105
-20    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-20-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:10:5-111
-20-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:10:22-79
-21    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-21-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:11:5-77
-21-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:11:22-74
-22    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-22-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:12:5-87
-22-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:12:22-84
-23    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-23-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:13:5-77
-23-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:13:22-74
-24
-25    <permission
-25-->[androidx.core:core:1.13.0] /Users/aicoder/.gradle/caches/8.14/transforms/6a3884a9222c271ec15327ef9be5776a/transformed/core-1.13.0/AndroidManifest.xml:22:5-24:47
-26        android:name="com.example.aroma.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
-26-->[androidx.core:core:1.13.0] /Users/aicoder/.gradle/caches/8.14/transforms/6a3884a9222c271ec15327ef9be5776a/transformed/core-1.13.0/AndroidManifest.xml:23:9-81
-27        android:protectionLevel="signature" />
-27-->[androidx.core:core:1.13.0] /Users/aicoder/.gradle/caches/8.14/transforms/6a3884a9222c271ec15327ef9be5776a/transformed/core-1.13.0/AndroidManifest.xml:24:9-44
-28
-29    <uses-permission android:name="com.example.aroma.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
-29-->[androidx.core:core:1.13.0] /Users/aicoder/.gradle/caches/8.14/transforms/6a3884a9222c271ec15327ef9be5776a/transformed/core-1.13.0/AndroidManifest.xml:26:5-97
-29-->[androidx.core:core:1.13.0] /Users/aicoder/.gradle/caches/8.14/transforms/6a3884a9222c271ec15327ef9be5776a/transformed/core-1.13.0/AndroidManifest.xml:26:22-94
-30
-31    <application
-31-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:15:5-41:19
-32        android:allowBackup="true"
-32-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:16:9-35
-33        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-33-->[androidx.core:core:1.13.0] /Users/aicoder/.gradle/caches/8.14/transforms/6a3884a9222c271ec15327ef9be5776a/transformed/core-1.13.0/AndroidManifest.xml:28:18-86
-34        android:extractNativeLibs="true"
-35        android:icon="@mipmap/ic_launcher"
-35-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:17:9-43
-36        android:label="@string/app_name"
-36-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:19:9-41
-37        android:requestLegacyExternalStorage="true"
-37-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:21:9-52
-38        android:supportsRtl="true"
-38-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:20:9-35
-39        android:theme="@style/Theme.Aroma" >
-39-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:18:9-43
-40        <activity
-40-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:23:9-30:20
-41            android:name="com.example.aroma.MainActivity"
-41-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:24:13-41
-42            android:exported="true" >
-42-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:25:13-36
-43            <intent-filter>
-43-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:26:13-29:29
-44                <action android:name="android.intent.action.MAIN" />
-44-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:27:17-69
-44-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:27:25-66
-45
-46                <category android:name="android.intent.category.LAUNCHER" />
-46-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:28:17-77
-46-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:28:27-74
-47            </intent-filter>
-48        </activity>
-49        <activity
-49-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:32:9-34:40
-50            android:name="com.example.aroma.SettingsActivity"
-50-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:33:13-45
-51            android:exported="false" />
-51-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:34:13-37
-52
-53        <service
-53-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:36:9-40:56
-54            android:name="com.example.aroma.ServerService"
-54-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:37:13-42
-55            android:enabled="true"
-55-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:38:13-35
-56            android:exported="false"
-56-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:39:13-37
-57            android:foregroundServiceType="dataSync" />
-57-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:40:13-53
-58
-59        <provider
-59-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
-60            android:name="androidx.startup.InitializationProvider"
-60-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
-61            android:authorities="com.example.aroma.androidx-startup"
-61-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
-62            android:exported="false" >
-62-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
-63            <meta-data
-63-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
-64                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-64-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
-65                android:value="androidx.startup" />
-65-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
-66            <meta-data
-66-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/aicoder/.gradle/caches/8.14/transforms/da07e7780b8254917b4f18448ab4803e/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:29:13-31:52
-67                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-67-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/aicoder/.gradle/caches/8.14/transforms/da07e7780b8254917b4f18448ab4803e/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:30:17-78
-68                android:value="androidx.startup" />
-68-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/aicoder/.gradle/caches/8.14/transforms/da07e7780b8254917b4f18448ab4803e/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:31:17-49
-69            <meta-data
-69-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
-70                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-70-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
-71                android:value="androidx.startup" />
-71-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
-72        </provider>
-73
-74        <receiver
-74-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
-75            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-75-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
-76            android:directBootAware="false"
-76-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
-77            android:enabled="true"
-77-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
-78            android:exported="true"
-78-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
-79            android:permission="android.permission.DUMP" >
-79-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
-80            <intent-filter>
-80-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
-81                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-81-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
-81-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
-82            </intent-filter>
-83            <intent-filter>
-83-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
-84                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-84-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
-84-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
-85            </intent-filter>
-86            <intent-filter>
-86-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
-87                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-87-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
-87-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
-88            </intent-filter>
-89            <intent-filter>
-89-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
-90                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-90-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
-90-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
-91            </intent-filter>
-92        </receiver>
-93    </application>
-94
-95</manifest>
+13    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+13-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:7:5-76
+13-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:7:22-73
+14    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+14-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:8:5-79
+14-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:8:22-76
+15    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+15-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:9:5-79
+15-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:9:22-76
+16    <uses-permission
+16-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:10:5-12:32
+17        android:name="android.permission.NEARBY_WIFI_DEVICES"
+17-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:10:22-75
+18        android:usesPermissionFlags="neverForLocation" />
+18-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:11:9-55
+19    <uses-permission
+19-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:13:5-107
+20        android:name="android.permission.READ_EXTERNAL_STORAGE"
+20-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:13:22-77
+21        android:maxSdkVersion="32" />
+21-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:13:78-104
+22    <uses-permission
+22-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:14:5-108
+23        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+23-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:14:22-78
+24        android:maxSdkVersion="32" />
+24-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:14:79-105
+25    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+25-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:15:5-111
+25-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:15:22-79
+26    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+26-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:16:5-77
+26-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:16:22-74
+27    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+27-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:17:5-87
+27-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:17:22-84
+28    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+28-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:18:5-77
+28-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:18:22-74
+29
+30    <permission
+30-->[androidx.core:core:1.13.0] /Users/aicoder/.gradle/caches/8.14/transforms/6a3884a9222c271ec15327ef9be5776a/transformed/core-1.13.0/AndroidManifest.xml:22:5-24:47
+31        android:name="com.example.aroma.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+31-->[androidx.core:core:1.13.0] /Users/aicoder/.gradle/caches/8.14/transforms/6a3884a9222c271ec15327ef9be5776a/transformed/core-1.13.0/AndroidManifest.xml:23:9-81
+32        android:protectionLevel="signature" />
+32-->[androidx.core:core:1.13.0] /Users/aicoder/.gradle/caches/8.14/transforms/6a3884a9222c271ec15327ef9be5776a/transformed/core-1.13.0/AndroidManifest.xml:24:9-44
+33
+34    <uses-permission android:name="com.example.aroma.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+34-->[androidx.core:core:1.13.0] /Users/aicoder/.gradle/caches/8.14/transforms/6a3884a9222c271ec15327ef9be5776a/transformed/core-1.13.0/AndroidManifest.xml:26:5-97
+34-->[androidx.core:core:1.13.0] /Users/aicoder/.gradle/caches/8.14/transforms/6a3884a9222c271ec15327ef9be5776a/transformed/core-1.13.0/AndroidManifest.xml:26:22-94
+35
+36    <application
+36-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:20:5-66:19
+37        android:allowBackup="true"
+37-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:21:9-35
+38        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+38-->[androidx.core:core:1.13.0] /Users/aicoder/.gradle/caches/8.14/transforms/6a3884a9222c271ec15327ef9be5776a/transformed/core-1.13.0/AndroidManifest.xml:28:18-86
+39        android:extractNativeLibs="true"
+40        android:icon="@mipmap/ic_launcher"
+40-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:22:9-43
+41        android:label="@string/app_name"
+41-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:24:9-41
+42        android:requestLegacyExternalStorage="true"
+42-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:26:9-52
+43        android:supportsRtl="true"
+43-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:25:9-35
+44        android:theme="@style/Theme.Aroma" >
+44-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:23:9-43
+45        <activity
+45-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:28:9-45:20
+46            android:name="com.example.aroma.MainActivity"
+46-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:29:13-41
+47            android:exported="true" >
+47-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:30:13-36
+48            <intent-filter>
+48-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:31:13-34:29
+49                <action android:name="android.intent.action.MAIN" />
+49-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:32:17-69
+49-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:32:25-66
+50
+51                <category android:name="android.intent.category.LAUNCHER" />
+51-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:33:17-77
+51-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:33:27-74
+52            </intent-filter>
+53            <intent-filter>
+53-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:35:13-39:29
+54                <action android:name="android.intent.action.SEND" />
+54-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:36:17-69
+54-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:36:25-66
+55
+56                <category android:name="android.intent.category.DEFAULT" />
+56-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:37:17-76
+56-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:37:27-73
+57
+58                <data android:mimeType="*/*" />
+58-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:38:17-48
+58-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:38:23-45
+59            </intent-filter>
+60            <intent-filter>
+60-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:40:13-44:29
+61                <action android:name="android.intent.action.SEND_MULTIPLE" />
+61-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:41:17-78
+61-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:41:25-75
+62
+63                <category android:name="android.intent.category.DEFAULT" />
+63-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:37:17-76
+63-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:37:27-73
+64
+65                <data android:mimeType="*/*" />
+65-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:38:17-48
+65-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:38:23-45
+66            </intent-filter>
+67        </activity>
+68        <activity
+68-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:47:9-49:40
+69            android:name="com.example.aroma.SettingsActivity"
+69-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:48:13-45
+70            android:exported="false" />
+70-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:49:13-37
+71
+72        <service
+72-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:51:9-55:56
+73            android:name="com.example.aroma.ServerService"
+73-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:52:13-42
+74            android:enabled="true"
+74-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:53:13-35
+75            android:exported="false"
+75-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:54:13-37
+76            android:foregroundServiceType="dataSync" />
+76-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:55:13-53
+77
+78        <provider
+79            android:name="androidx.core.content.FileProvider"
+79-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:58:13-62
+80            android:authorities="com.example.aroma.fileprovider"
+80-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:59:13-64
+81            android:exported="false"
+81-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:60:13-37
+82            android:grantUriPermissions="true" >
+82-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:61:13-47
+83            <meta-data
+83-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:62:13-64:54
+84                android:name="android.support.FILE_PROVIDER_PATHS"
+84-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:63:17-67
+85                android:resource="@xml/file_paths" />
+85-->/Users/aicoder/src/app-aroma-java/app/src/main/AndroidManifest.xml:64:17-51
+86        </provider>
+87        <provider
+87-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+88            android:name="androidx.startup.InitializationProvider"
+88-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+89            android:authorities="com.example.aroma.androidx-startup"
+89-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+90            android:exported="false" >
+90-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+91            <meta-data
+91-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+92                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+92-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+93                android:value="androidx.startup" />
+93-->[androidx.emoji2:emoji2:1.3.0] /Users/aicoder/.gradle/caches/8.14/transforms/905c5341a6a1d3a6f7dffdc57686e680/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+94            <meta-data
+94-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/aicoder/.gradle/caches/8.14/transforms/da07e7780b8254917b4f18448ab4803e/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:29:13-31:52
+95                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+95-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/aicoder/.gradle/caches/8.14/transforms/da07e7780b8254917b4f18448ab4803e/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:30:17-78
+96                android:value="androidx.startup" />
+96-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/aicoder/.gradle/caches/8.14/transforms/da07e7780b8254917b4f18448ab4803e/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:31:17-49
+97            <meta-data
+97-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+98                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+98-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+99                android:value="androidx.startup" />
+99-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+100        </provider>
+101
+102        <receiver
+102-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+103            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+103-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+104            android:directBootAware="false"
+104-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+105            android:enabled="true"
+105-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+106            android:exported="true"
+106-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+107            android:permission="android.permission.DUMP" >
+107-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+108            <intent-filter>
+108-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+109                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+109-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+109-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+110            </intent-filter>
+111            <intent-filter>
+111-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+112                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+112-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+112-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+113            </intent-filter>
+114            <intent-filter>
+114-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+115                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+115-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+115-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+116            </intent-filter>
+117            <intent-filter>
+117-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+118                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+118-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+118-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/aicoder/.gradle/caches/8.14/transforms/7e19377a18a076bb9345f337bbff7168/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+119            </intent-filter>
+120        </receiver>
+121    </application>
+122
+123</manifest>

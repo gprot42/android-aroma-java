@@ -31,6 +31,40 @@ public class WebServer extends NanoHTTPD {
     private final String username;
     private final String password;
     private ServerEventListener eventListener;
+    // Last ~200 diagnostic events for /_aroma_diag
+    private static final java.util.Deque<String> DIAG_LOG = new java.util.concurrent.ConcurrentLinkedDeque<>();
+    private static final int DIAG_MAX = 300;
+
+    static void diag(String line) {
+        String stamped = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US).format(new Date()) + " " + line;
+        Log.i("AROMA_DIAG", stamped);
+        DIAG_LOG.add(stamped);
+        while (DIAG_LOG.size() > DIAG_MAX) DIAG_LOG.pollFirst();
+    }
+
+    /**
+     * Decode the X-Upload-Path header value. The value must be the base64
+     * encoding of the relative path as UTF-8 bytes. Base64 uses only ASCII
+     * characters, so it travels cleanly through HTTP headers regardless of
+     * what characters (", ?, Japanese, etc.) are in the original filename.
+     * Returns null on decode failure or if the path tries to escape the root.
+     */
+    private String decodeUploadPathHeader(String headerValue) {
+        try {
+            byte[] raw = Base64.getDecoder().decode(headerValue.trim());
+            String path = new String(raw, "UTF-8").replace('\\', '/').trim();
+            while (path.startsWith("/")) path = path.substring(1);
+            if (path.isEmpty()) return null;
+            // Reject any path traversal attempts.
+            for (String seg : path.split("/")) {
+                if (seg.equals("..") || seg.equals(".") || seg.isEmpty()) return null;
+            }
+            return path;
+        } catch (Throwable t) {
+            diag("X-Upload-Path decode failed: " + t.getMessage());
+            return null;
+        }
+    }
 
     public WebServer(int port, File wwwRoot, Context ctx, String username, String password) {
         super("0.0.0.0", port);
@@ -95,6 +129,31 @@ public class WebServer extends NanoHTTPD {
         String uri = session.getUri();
         if (uri.isEmpty() || uri.equals("/")) uri = "/";
         Method method = session.getMethod();
+
+        // Diagnostic endpoint (no file system access, safe to call from browser)
+        if (uri.equals("/_aroma_diag") && method == Method.GET) {
+            StringBuilder body = new StringBuilder();
+            for (String line : DIAG_LOG) body.append(line).append('\n');
+            return newFixedLengthResponse(Response.Status.OK, "text/plain; charset=utf-8", body.toString());
+        }
+
+        // Header-based PUT upload: any request with X-Upload-Path targets
+        // a file at that relative path, bypassing the URL. This avoids URL
+        // encoding headaches with filenames containing ", ?, or non-ASCII.
+        if (method == Method.PUT) {
+            String hdr = session.getHeaders().get("x-upload-path");
+            if (hdr != null && !hdr.isEmpty()) {
+                String relPath = decodeUploadPathHeader(hdr);
+                diag("PUT X-Upload-Path='" + hdr + "' decoded='" + relPath + "' len=" + session.getHeaders().get("content-length"));
+                if (relPath == null || relPath.isEmpty()) {
+                    return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Bad X-Upload-Path header");
+                }
+                File target = new File(rootDir, relPath);
+                return handlePut(session, target);
+            }
+            diag("PUT uri='" + uri + "' len=" + session.getHeaders().get("content-length"));
+        }
+
         File currentDir;
         if (uri.equals("/")) {
             currentDir = rootDir;
@@ -343,6 +402,7 @@ public class WebServer extends NanoHTTPD {
         html.append("Overwrite existing files");
         html.append("</label>");
         html.append("<button type='button' class='btn btn-primary' id='uploadBtn' disabled onclick='startUpload()'>Upload</button>");
+        html.append("<button type='button' class='btn btn-secondary' id='stopUploadBtn' onclick='stopUpload()' style='display:none;margin-left:8px'>Stop Upload</button>");
         html.append("<button type='button' class='btn btn-danger' id='retryFailedBtn' onclick='retryFailed()' style='display:none;margin-left:8px'>Retry Failed</button>");
         html.append("</div>");
         
@@ -479,20 +539,24 @@ public class WebServer extends NanoHTTPD {
         html.append("function updateFileStatus(){let sf=document.getElementById('selectedFiles');let btn=document.getElementById('uploadBtn');let clr=document.getElementById('clearSelBtn');uploadFiles=rebuildUploadList();let count=uploadFiles.length;if(count>0){let totalSize=uploadFiles.reduce((a,f)=>a+f.size,0);let folderNames=addedFolders.map(fs=>{let p=fs[0]&&fs[0].webkitRelativePath;return p?p.split('/')[0]:'(folder)'});let uploaded=getUploadedFiles();let alreadyUploaded=uploadFiles.filter(f=>{let fn=f.webkitRelativePath||f.name;return uploaded[fn]&&uploaded[fn].size===f.size}).length;let info=count+' file(s) ('+formatSize(totalSize)+')';if(folderNames.length>0)info+='<br>Folders ('+folderNames.length+'): '+folderNames.join(', ');if(pickedFiles.length>0)info+='<br>'+pickedFiles.length+' individual file(s)';if(alreadyUploaded>0){info+='<br><span style=\"color:#4da6ff\">'+alreadyUploaded+' already uploaded - will resume remaining '+(count-alreadyUploaded)+'</span>'}sf.innerHTML=info;btn.disabled=false;btn.textContent=alreadyUploaded>0?'Resume Upload':'Upload';clr.style.display='inline-block'}else{sf.textContent='';btn.disabled=true;btn.textContent='Upload';clr.style.display='none'}}");
         html.append("document.getElementById('fileInput').addEventListener('change',function(){pickedFiles=pickedFiles.concat(Array.from(this.files));this.value='';updateFileStatus()});");
         html.append("document.getElementById('folderInput').addEventListener('change',function(){let fs=Array.from(this.files);if(fs.length>0){let root=fs[0].webkitRelativePath?fs[0].webkitRelativePath.split('/')[0]:null;let dup=root&&addedFolders.some(f=>f[0]&&f[0].webkitRelativePath&&f[0].webkitRelativePath.split('/')[0]===root);if(!dup)addedFolders.push(fs)}this.value='';updateFileStatus()});");
-        html.append("const DEFAULT_CONCURRENCY=4;const LARGE_UPLOAD_CONCURRENCY=2;const LARGE_UPLOAD_BYTES=2*1024*1024*1024;const MAX_RETRIES=4;const RETRY_DELAYS=[500,1500,3000,6000];let isUploading=false;let pendingFailures=[];");
+        html.append("const DEFAULT_CONCURRENCY=4;const LARGE_UPLOAD_CONCURRENCY=2;const LARGE_UPLOAD_BYTES=2*1024*1024*1024;const MAX_RETRIES=4;const RETRY_DELAYS=[500,1500,3000,6000];let isUploading=false;let uploadCancelled=false;let activeXhrs=new Set();let pendingFailures=[];");
         html.append("window.addEventListener('beforeunload',function(e){let navigating=document.body.dataset.allowNavigate==='true';if(isUploading&&!navigating){e.preventDefault();e.returnValue='Upload in progress. Are you sure you want to leave?';return e.returnValue}});");
         html.append("function isRetryable(status){return status===0||status===408||status===409||status===425||status===429||(status>=500&&status<600)}");
         html.append("function sleep(ms){return new Promise(r=>setTimeout(r,ms))}");
-        html.append("async function runUpload(filesIn,overwrite,isRetryPass){if(!filesIn||filesIn.length===0)return{success:0,skipped:0,failed:[]};let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');let pct=document.getElementById('progressPercent');let txt=document.getElementById('progressText');let spd=document.getElementById('progressSpeed');btn.disabled=true;btn.textContent=isRetryPass?'Retrying...':'Uploading...';prog.style.display='block';let uploaded=getUploadedFiles();let filesToUpload=isRetryPass?filesIn.slice():filesIn.filter(f=>{let fn=f.webkitRelativePath||f.name;return!uploaded[fn]||uploaded[fn].size!==f.size||overwrite});let skippedPrev=isRetryPass?0:(filesIn.length-filesToUpload.length);let totalFiles=filesToUpload.length;let totalBytes=filesToUpload.reduce((a,f)=>a+f.size,0);let concurrency=totalBytes>=LARGE_UPLOAD_BYTES?LARGE_UPLOAD_CONCURRENCY:DEFAULT_CONCURRENCY;let uploadedBytes=0;let uploadedFiles=0;let success=0;let skipped=0;let failed=[];let queue=filesToUpload.map(f=>({file:f,attempt:0}));let startTime=Date.now();function updateProgress(){let p=totalBytes>0?(uploadedBytes/totalBytes*100):0;bar.style.width=p+'%';pct.textContent=Math.round(p)+'%';txt.textContent=uploadedFiles+' / '+totalFiles+' files ('+formatSize(uploadedBytes)+' / '+formatSize(totalBytes)+')';let elapsed=(Date.now()-startTime)/1000;let speed=elapsed>0?uploadedBytes/elapsed:0;spd.textContent='Speed: '+formatSize(speed)+'/s'+(skippedPrev>0?' | Resumed: '+skippedPrev+' skipped':'')+(isRetryPass?' | Retrying failed items':'')+' | Parallel: '+concurrency}");
-        html.append("function uploadOnce(file,forceOverwrite){return new Promise((resolve)=>{let fname=file.webkitRelativePath||file.name;let fd=new FormData();fd.append('uploadedFile',file,fname);fd.append('originalPath',fname);if(overwrite||forceOverwrite)fd.append('overwrite','true');let xhr=new XMLHttpRequest();xhr.timeout=300000;let attemptBytes=0;xhr.upload.onprogress=function(e){if(e.lengthComputable){let delta=e.loaded-attemptBytes;attemptBytes=e.loaded;uploadedBytes+=delta;updateProgress()}};xhr.onload=function(){if(xhr.status>=200&&xhr.status<300){resolve({ok:true,status:xhr.status})}else if(xhr.responseText&&xhr.responseText.includes('already exists')){uploadedBytes-=attemptBytes;resolve({ok:true,status:xhr.status,alreadyExists:true})}else{uploadedBytes-=attemptBytes;let reason='HTTP '+xhr.status;if(xhr.responseText){let t=xhr.responseText;if(t.includes('permission'))reason='Permission denied';else if(t.includes('directory'))reason='Cannot create directory';else if(t.includes('temp file'))reason='Temp file error';else if(t.includes('storage'))reason='Storage full or unavailable';else if(t.length<100)reason=t.replace(/<[^>]*>/g,'').trim()||reason}resolve({ok:false,status:xhr.status,reason:reason})}};xhr.onerror=function(){uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Network error'})};xhr.ontimeout=function(){uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:408,reason:'Request timed out'})};xhr.onabort=function(){uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Aborted'})};xhr.open('POST',window.location.pathname);xhr.send(fd)})}");
-        html.append("async function uploadWithRetry(file){let fname=file.webkitRelativePath||file.name;let lastReason='Unknown';for(let attempt=0;attempt<=MAX_RETRIES;attempt++){let r=await uploadOnce(file,isRetryPass||attempt>0);if(r.ok){if(r.alreadyExists){skipped++}else{success++;saveUploadedFile(fname,file.size)}return{ok:true}}lastReason=r.reason;if(!isRetryable(r.status)){return{ok:false,reason:lastReason,fatal:true}}if(attempt<MAX_RETRIES){let d=RETRY_DELAYS[Math.min(attempt,RETRY_DELAYS.length-1)];await sleep(d)}}return{ok:false,reason:lastReason+' (after '+MAX_RETRIES+' retries)',fatal:false}}");
-        html.append("async function worker(){while(queue.length>0){let item=queue.shift();if(!item)continue;let r=await uploadWithRetry(item.file);if(!r.ok){failed.push({file:item.file,name:item.file.webkitRelativePath||item.file.name,reason:r.reason})}uploadedFiles++;updateProgress()}}");
+        html.append("async function runUpload(filesIn,overwrite,isRetryPass){if(!filesIn||filesIn.length===0)return{success:0,skipped:0,failed:[]};let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');let pct=document.getElementById('progressPercent');let txt=document.getElementById('progressText');let spd=document.getElementById('progressSpeed');btn.disabled=true;btn.textContent=isRetryPass?'Retrying...':'Uploading...';prog.style.display='block';let uploaded=getUploadedFiles();let filesToUpload=isRetryPass?filesIn.slice():filesIn.filter(f=>{let fn=f.webkitRelativePath||f.name;return!uploaded[fn]||uploaded[fn].size!==f.size});let skippedPrev=isRetryPass?0:(filesIn.length-filesToUpload.length);let totalFiles=filesToUpload.length;let totalBytes=filesToUpload.reduce((a,f)=>a+f.size,0);let concurrency=totalBytes>=LARGE_UPLOAD_BYTES?LARGE_UPLOAD_CONCURRENCY:DEFAULT_CONCURRENCY;let uploadedBytes=0;let uploadedFiles=0;let success=0;let skipped=0;let failed=[];let queue=filesToUpload.map(f=>({file:f,attempt:0}));let startTime=Date.now();function updateProgress(){let p=totalBytes>0?(uploadedBytes/totalBytes*100):0;bar.style.width=p+'%';pct.textContent=Math.round(p)+'%';txt.textContent=uploadedFiles+' / '+totalFiles+' files ('+formatSize(uploadedBytes)+' / '+formatSize(totalBytes)+')';let elapsed=(Date.now()-startTime)/1000;let speed=elapsed>0?uploadedBytes/elapsed:0;spd.textContent='Speed: '+formatSize(speed)+'/s'+(skippedPrev>0?' | Resumed: '+skippedPrev+' skipped':'')+(isRetryPass?' | Retrying failed items':'')+' | Parallel: '+concurrency}");
+        html.append("function encodePathSegment(p){return p.split('/').map(s=>encodeURIComponent(s)).join('/')}");
+        html.append("function b64UploadPath(s){return btoa(unescape(encodeURIComponent(s)))}");
+        html.append("function uploadOnce(file,forceOverwrite,usePut){return new Promise((resolve)=>{let fname=file.webkitRelativePath||file.name;let xhr=new XMLHttpRequest();xhr.timeout=600000;let attemptBytes=0;xhr.upload.onprogress=function(e){if(e.lengthComputable){let delta=e.loaded-attemptBytes;attemptBytes=e.loaded;uploadedBytes+=delta;updateProgress()}};xhr.onload=function(){activeXhrs.delete(xhr);if(xhr.status>=200&&xhr.status<300){resolve({ok:true,status:xhr.status})}else if(xhr.responseText&&xhr.responseText.includes('already exists')){uploadedBytes-=attemptBytes;resolve({ok:true,status:xhr.status,alreadyExists:true})}else{uploadedBytes-=attemptBytes;let reason='HTTP '+xhr.status;let raw=(xhr.responseText||'').replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ').trim();if(usePut){if(raw)reason='HTTP '+xhr.status+': '+raw.substring(0,200)}else{let t=raw.toLowerCase();if(t.includes('permission denied'))reason='Permission denied';else if(t.includes('cannot create directory'))reason='Cannot create directory';else if(t.includes('temp file'))reason='Temp file error';else if(t.includes('no space')||t.includes('enospc'))reason='Storage full (no space)';else if(raw&&raw.length<200)reason='HTTP '+xhr.status+': '+raw}resolve({ok:false,status:xhr.status,reason:reason})}};xhr.onerror=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Network error (xhr.onerror - see /_aroma_diag on server for details)'})};xhr.ontimeout=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:408,reason:'Request timed out after 10min'})};xhr.onabort=function(){activeXhrs.delete(xhr);uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Aborted',aborted:true})};if(usePut){let base=window.location.pathname;if(!base.endsWith('/'))base+='/';xhr.open('PUT',base+'_aroma_put');xhr.setRequestHeader('Content-Type','application/octet-stream');xhr.setRequestHeader('X-Upload-Path',b64UploadPath(fname));activeXhrs.add(xhr);xhr.send(file)}else{let fd=new FormData();fd.append('uploadedFile',file,fname);fd.append('originalPath',fname);if(overwrite||forceOverwrite)fd.append('overwrite','true');xhr.open('POST',window.location.pathname);activeXhrs.add(xhr);xhr.send(fd)}})}");
+        html.append("async function uploadWithRetry(file){let fname=file.webkitRelativePath||file.name;let lastReason='Unknown';for(let attempt=0;attempt<=MAX_RETRIES;attempt++){if(uploadCancelled)return{ok:false,reason:'Cancelled',fatal:true};let usePut=isRetryPass||attempt>=2;let r=await uploadOnce(file,isRetryPass||attempt>0,usePut);if(r.aborted||uploadCancelled)return{ok:false,reason:'Cancelled',fatal:true};if(r.ok){if(r.alreadyExists){skipped++}else{success++;saveUploadedFile(fname,file.size)}return{ok:true}}lastReason=r.reason;if(!isRetryable(r.status)){return{ok:false,reason:lastReason,fatal:true}}if(attempt<MAX_RETRIES){let d=RETRY_DELAYS[Math.min(attempt,RETRY_DELAYS.length-1)];await sleep(d)}}return{ok:false,reason:lastReason+' (after '+MAX_RETRIES+' retries)',fatal:false}}");
+        html.append("async function worker(){while(queue.length>0){if(uploadCancelled)break;let item=queue.shift();if(!item)continue;let r=await uploadWithRetry(item.file);if(!r.ok&&r.reason!=='Cancelled'){failed.push({file:item.file,name:item.file.webkitRelativePath||item.file.name,reason:r.reason})}uploadedFiles++;updateProgress()}}");
         html.append("if(totalFiles===0){btn.textContent='Upload';btn.disabled=false;prog.style.display='none';if(!isRetryPass)alert('All '+skippedPrev+' files already uploaded!');return{success:0,skipped:skippedPrev,failed:[]}}");
         html.append("let workers=[];for(let i=0;i<concurrency;i++)workers.push(worker());await Promise.all(workers);return{success:success,skipped:skipped+skippedPrev,failed:failed}}");
         html.append("function updateRetryButton(){let btn=document.getElementById('retryFailedBtn');if(!btn)return;if(pendingFailures.length>0){btn.style.display='inline-block';btn.textContent='Retry '+pendingFailures.length+' Failed'}else{btn.style.display='none'}}");
-        html.append("async function retryFailed(){if(pendingFailures.length===0||isUploading)return;isUploading=true;let files=pendingFailures.map(f=>f.file);pendingFailures=[];updateRetryButton();let res=await runUpload(files,true,true);finalizeUpload(res,true)}");
-        html.append("function finalizeUpload(res,wasRetry){isUploading=false;let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');btn.textContent='Upload';btn.disabled=uploadFiles.length===0;prog.style.display='none';bar.style.width='0%';pendingFailures=res.failed||[];updateRetryButton();let msg=(wasRetry?'Retry pass complete\\n':'')+'Uploaded: '+res.success;if(res.skipped>0)msg+='\\nSkipped/resumed: '+res.skipped;if(pendingFailures.length>0){msg+='\\nStill failing: '+pendingFailures.length+'\\n';pendingFailures.forEach(f=>{msg+='\\n  '+f.name+'\\n    Reason: '+f.reason+'\\n'});msg+='\\nClick \"Retry '+pendingFailures.length+' Failed\" to try again.'}alert(msg);if(pendingFailures.length===0){clearUploadSession();history.replaceState(null,'',window.location.pathname);let a=document.createElement('a');a.href=window.location.pathname;document.body.appendChild(a);a.click()}}");
-        html.append("async function startUpload(){if(uploadFiles.length===0||isUploading)return;document.body.dataset.allowNavigate='false';isUploading=true;pendingFailures=[];updateRetryButton();let overwrite=document.getElementById('overwriteCheck').checked;let res=await runUpload(uploadFiles,overwrite,false);if(res.failed&&res.failed.length>0){let pass2=await runUpload(res.failed.map(f=>f.file),true,true);res.success+=pass2.success;res.skipped+=pass2.skipped;res.failed=pass2.failed}finalizeUpload(res,false)}");
+        html.append("function setStopButtonVisible(v){let b=document.getElementById('stopUploadBtn');if(b)b.style.display=v?'inline-block':'none';if(b){b.disabled=false;b.textContent='Stop Upload'}}");
+        html.append("function stopUpload(){if(!isUploading)return;if(!confirm('Stop the current upload? In-flight files will be cancelled.'))return;uploadCancelled=true;let b=document.getElementById('stopUploadBtn');if(b){b.disabled=true;b.textContent='Stopping...'}activeXhrs.forEach(x=>{try{x.abort()}catch(e){}});activeXhrs.clear()}");
+        html.append("async function retryFailed(){if(pendingFailures.length===0||isUploading)return;uploadCancelled=false;isUploading=true;setStopButtonVisible(true);let files=pendingFailures.map(f=>f.file);pendingFailures=[];updateRetryButton();let res=await runUpload(files,true,true);finalizeUpload(res,true)}");
+        html.append("function finalizeUpload(res,wasRetry){isUploading=false;setStopButtonVisible(false);let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');btn.textContent='Upload';btn.disabled=uploadFiles.length===0;prog.style.display='none';bar.style.width='0%';pendingFailures=res.failed||[];updateRetryButton();let msg=(uploadCancelled?'Upload stopped\\n':(wasRetry?'Retry pass complete\\n':''))+'Uploaded: '+res.success;if(res.skipped>0)msg+='\\nSkipped/resumed: '+res.skipped;if(pendingFailures.length>0){msg+='\\nStill failing: '+pendingFailures.length+'\\n';pendingFailures.forEach(f=>{msg+='\\n  '+f.name+'\\n    Reason: '+f.reason+'\\n'});msg+='\\nClick \"Retry '+pendingFailures.length+' Failed\" to try again.'}alert(msg);uploadCancelled=false;if(pendingFailures.length===0&&!wasRetry&&res.success+res.skipped>0){clearUploadSession();history.replaceState(null,'',window.location.pathname);let a=document.createElement('a');a.href=window.location.pathname;document.body.appendChild(a);a.click()}}");
+        html.append("async function startUpload(){if(uploadFiles.length===0||isUploading)return;document.body.dataset.allowNavigate='false';uploadCancelled=false;isUploading=true;pendingFailures=[];updateRetryButton();setStopButtonVisible(true);let overwrite=document.getElementById('overwriteCheck').checked;let res=await runUpload(uploadFiles,overwrite,false);if(!uploadCancelled&&res.failed&&res.failed.length>0){let pass2=await runUpload(res.failed.map(f=>f.file),true,true);res.success+=pass2.success;res.skipped+=pass2.skipped;res.failed=pass2.failed}finalizeUpload(res,false)}");
         html.append("document.addEventListener('click',function(e){let anchor=e.target.closest('a');if(!anchor)return;let href=anchor.getAttribute('href');if(!href||href.startsWith('#')||anchor.target==='_blank')return;if(isUploading){e.preventDefault();window.open(anchor.href,'_blank')}},true);");
         html.append("document.querySelector('.file-list').addEventListener('contextmenu',function(e){if(e.target===this||e.target.classList.contains('empty')){showEmptyContextMenu(e)}});");
         html.append("initTheme();");
@@ -710,47 +774,78 @@ public class WebServer extends NanoHTTPD {
     }
 
     private Response handlePut(IHTTPSession session, File currentFile) {
-        Map<String, String> parsedFiles = new HashMap<>();
+        long t0 = System.currentTimeMillis();
+        String label = currentFile.getName();
         try {
-            session.parseBody(parsedFiles);
-            String tempPath = parsedFiles.get("content");
-            if (tempPath == null) {
-                tempPath = parsedFiles.get("postData");
-            }
-            if (tempPath == null) {
-                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Missing upload body");
-            }
-            File tempFile = new File(tempPath);
             File parent = currentFile.getParentFile();
             if (parent != null && !parent.exists() && !parent.mkdirs()) {
-                return newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain", "Cannot create parent directory");
+                diag("PUT mkdirs failed: " + parent.getAbsolutePath());
+                return newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain", "Cannot create parent directory: " + parent.getAbsolutePath());
+            }
+            long expectedLen = -1;
+            String lenHeader = session.getHeaders().get("content-length");
+            if (lenHeader != null) {
+                try { expectedLen = Long.parseLong(lenHeader.trim()); } catch (NumberFormatException ignored) {}
             }
             boolean existed = currentFile.exists();
-            try (FileInputStream fis = new FileInputStream(tempFile);
-                 FileOutputStream fos = new FileOutputStream(currentFile);
-                 FileChannel inCh = fis.getChannel();
-                 FileChannel outCh = fos.getChannel()) {
-                long size = inCh.size();
-                long pos = 0;
-                while (pos < size) {
-                    long written = inCh.transferTo(pos, size - pos, outCh);
-                    if (written <= 0) {
-                        break;
+            InputStream body = session.getInputStream();
+            long written = 0;
+            byte[] buf = new byte[64 * 1024];
+            try (FileOutputStream fos = new FileOutputStream(currentFile)) {
+                while (true) {
+                    int toRead = buf.length;
+                    if (expectedLen > 0) {
+                        long remaining = expectedLen - written;
+                        if (remaining <= 0) break;
+                        if (remaining < toRead) toRead = (int) remaining;
                     }
-                    pos += written;
+                    int n;
+                    try {
+                        n = body.read(buf, 0, toRead);
+                    } catch (java.io.IOException ioe) {
+                        diag("PUT read error at " + written + "/" + expectedLen + " for " + label + ": " + ioe.getMessage());
+                        throw ioe;
+                    }
+                    if (n < 0) break;
+                    if (n == 0) continue;
+                    try {
+                        fos.write(buf, 0, n);
+                    } catch (java.io.IOException ioe) {
+                        diag("PUT write error at " + written + " for " + currentFile.getAbsolutePath() + ": " + ioe.getMessage());
+                        throw ioe;
+                    }
+                    written += n;
                 }
-                outCh.force(true);
+                fos.getFD().sync();
             }
-            MediaScannerConnection.scanFile(context, new String[]{currentFile.getAbsolutePath()}, null, null);
+            if (expectedLen > 0 && written != expectedLen) {
+                diag("PUT short body " + written + "/" + expectedLen + " for " + label);
+                if (currentFile.exists()) currentFile.delete();
+                Response response = newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain",
+                        "Short body: " + written + "/" + expectedLen + " bytes");
+                addWebDavHeaders(response);
+                return response;
+            }
+            try {
+                MediaScannerConnection.scanFile(context, new String[]{currentFile.getAbsolutePath()}, null, null);
+            } catch (Throwable ignore) { }
             if (eventListener != null) {
                 eventListener.onFileUploaded(currentFile.getName(), getClientIp(session));
             }
+            long dt = System.currentTimeMillis() - t0;
+            diag("PUT OK " + label + " " + written + "B in " + dt + "ms");
             Response response = newFixedLengthResponse(existed ? Response.Status.OK : Response.Status.CREATED, "text/plain", "");
             addWebDavHeaders(response);
             return response;
         } catch (Exception e) {
-            Log.e("AROMA", "WebDAV PUT failed: " + e.getMessage());
-            Response response = newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", e.getMessage());
+            String cls = e.getClass().getSimpleName();
+            String msg = e.getMessage() == null ? cls : cls + ": " + e.getMessage();
+            diag("PUT FAIL " + label + " -> " + msg);
+            Log.e("AROMA", "WebDAV PUT failed for " + currentFile.getAbsolutePath() + ": " + msg, e);
+            if (currentFile.exists()) {
+                try { currentFile.delete(); } catch (Exception ignored) {}
+            }
+            Response response = newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", msg);
             addWebDavHeaders(response);
             return response;
         }

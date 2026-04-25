@@ -100,9 +100,6 @@ public class MainActivity extends Activity implements ServerEventListener {
             serverService = binder.getService();
             serverService.setEventListener(MainActivity.this);
             serviceBound = true;
-            if (pendingHotspotIp != null && !pendingHotspotIp.isEmpty()) {
-                serverService.setPreferredLocalIp(pendingHotspotIp);
-            }
             if (pendingStartServerAfterBind) {
                 pendingStartServerAfterBind = false;
                 startServer();
@@ -272,6 +269,9 @@ public class MainActivity extends Activity implements ServerEventListener {
 
     private void toggleHotspot() {
         if (hotspotManager != null && hotspotManager.isActive()) {
+            hotspotButton.setEnabled(false);
+            hotspotButton.setText(R.string.hotspot_stopping);
+            Toast.makeText(this, R.string.hotspot_stopping, Toast.LENGTH_SHORT).show();
             hotspotManager.stop();
             return;
         }
@@ -318,7 +318,10 @@ public class MainActivity extends Activity implements ServerEventListener {
                     pendingHotspotIp = ipAddress;
                     addLogEntry("Hotspot started: " + ssid);
                     if (serviceBound && serverService != null) {
-                        serverService.setPreferredLocalIp(ipAddress);
+                        // Do NOT override the server URL with the hotspot IP —
+                        // the guessed 192.168.49.1 may not be reachable. Keep
+                        // the server's real bound URL and show all IPs in the
+                        // hotspot info panel so the user can pick one.
                         if (!serverService.isServerRunning()) {
                             startServer();
                         } else {
@@ -378,10 +381,32 @@ public class MainActivity extends Activity implements ServerEventListener {
     }
 
     private String buildHotspotInfoText(String ssid, String password, String url) {
-        return "Ad-hoc WiFi (no router needed)\n"
-                + "SSID\n" + ssid + "\n\n"
-                + "PASSWORD\n" + (password == null || password.isEmpty() ? "No password" : password) + "\n\n"
-                + "OPEN ON MAC\n" + url;
+        StringBuilder sb = new StringBuilder();
+        sb.append("Ad-hoc WiFi (no router needed)\n");
+        sb.append("SSID\n").append(ssid).append("\n\n");
+        sb.append("PASSWORD\n")
+                .append(password == null || password.isEmpty() ? "No password" : password)
+                .append("\n\n");
+        sb.append("OPEN ON MAC\n");
+        java.util.List<String> ips = HotspotManager.listLocalIpv4();
+        int port = 8080;
+        try {
+            if (url != null) {
+                int colon = url.lastIndexOf(':');
+                if (colon > 0 && colon < url.length() - 1) {
+                    port = Integer.parseInt(url.substring(colon + 1).replaceAll("[^0-9].*", ""));
+                }
+            }
+        } catch (Throwable ignore) { }
+        if (ips.isEmpty()) {
+            sb.append(url == null ? "(no address)" : url);
+        } else {
+            for (int i = 0; i < ips.size(); i++) {
+                if (i > 0) sb.append('\n');
+                sb.append("http://").append(ips.get(i)).append(':').append(port);
+            }
+        }
+        return sb.toString();
     }
 
     private void updateHotspotUiFromServer() {

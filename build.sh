@@ -47,7 +47,8 @@ if [ "$1" == "--release" ]; then
     # Sign the APK
     echo ""
     echo "Signing APK..."
-    apksigner sign --ks ~/.android/debug.keystore --ks-pass pass:android --out "$SIGNED_APK" "$UNSIGNED_APK" 2>&1
+    APKSIGNER="/Users/aicoder/Library/Android/sdk/build-tools/35.0.0/apksigner"
+    "$APKSIGNER" sign --ks ~/.android/debug.keystore --ks-pass pass:android --out "$SIGNED_APK" "$UNSIGNED_APK" 2>&1
     
     if [ $? -eq 0 ]; then
         echo "Signed APK created: $SIGNED_APK"

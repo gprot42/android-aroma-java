@@ -33,6 +33,7 @@ public class HotspotManager {
     private final Context context;
     private WifiManager.LocalOnlyHotspotReservation reservation;
     private boolean starting;
+    private Listener currentListener;
 
     public HotspotManager(Context context) {
         this.context = context.getApplicationContext();
@@ -47,6 +48,7 @@ public class HotspotManager {
     }
 
     public void start(Listener listener) {
+        this.currentListener = listener;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             listener.onHotspotFailed("Android 8.0 or newer required for local hotspot");
             return;
@@ -101,7 +103,9 @@ public class HotspotManager {
                     super.onStopped();
                     reservation = null;
                     starting = false;
-                    listener.onHotspotStopped();
+                    Listener l = currentListener;
+                    currentListener = null;
+                    if (l != null) l.onHotspotStopped();
                 }
 
                 @Override
@@ -127,6 +131,7 @@ public class HotspotManager {
     }
 
     public void stop() {
+        Listener l = currentListener;
         if (reservation != null) {
             try {
                 reservation.close();
@@ -134,6 +139,14 @@ public class HotspotManager {
                 Log.w(TAG, "Hotspot close failed: " + t.getMessage());
             }
             reservation = null;
+        }
+        starting = false;
+        // Always fire the stopped callback synchronously so the UI updates
+        // immediately; the system's onStopped callback is sometimes delayed
+        // or skipped depending on the Android version.
+        if (l != null) {
+            currentListener = null;
+            new Handler(Looper.getMainLooper()).post(l::onHotspotStopped);
         }
     }
 
@@ -187,5 +200,33 @@ public class HotspotManager {
             Log.w(TAG, "Hotspot IP scan failed: " + t.getMessage());
         }
         return best != null ? best : "192.168.49.1";
+    }
+
+    /**
+     * Return every non-loopback IPv4 address currently bound on the device,
+     * so the UI can present the user with whichever one is reachable from
+     * their Mac (regular Wi-Fi vs. hotspot interface).
+     */
+    public static java.util.List<String> listLocalIpv4() {
+        java.util.List<String> result = new java.util.ArrayList<>();
+        try {
+            for (Enumeration<NetworkInterface> ifs = NetworkInterface.getNetworkInterfaces(); ifs.hasMoreElements(); ) {
+                NetworkInterface nif = ifs.nextElement();
+                if (!nif.isUp() || nif.isLoopback() || nif.isVirtual()) continue;
+                for (Enumeration<InetAddress> addrs = nif.getInetAddresses(); addrs.hasMoreElements(); ) {
+                    InetAddress addr = addrs.nextElement();
+                    if (!(addr instanceof Inet4Address) || addr.isLoopbackAddress() || addr.isLinkLocalAddress()) {
+                        continue;
+                    }
+                    String host = addr.getHostAddress();
+                    if (host != null && !result.contains(host)) {
+                        result.add(host);
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "IPv4 scan failed: " + t.getMessage());
+        }
+        return result;
     }
 }

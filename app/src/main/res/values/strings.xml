@@ -25,6 +25,7 @@
     <string name="hotspot_start">Start Hotspot Transfer (no WiFi needed)</string>
     <string name="hotspot_stop">Stop Hotspot Transfer</string>
     <string name="hotspot_starting">Starting hotspot…</string>
+    <string name="hotspot_stopping">Stopping hotspot…</string>
     <string name="hotspot_stopped">Hotspot stopped</string>
     <string name="hotspot_permission_needed">Location / Nearby devices permission is required to start the hotspot</string>
     <string name="show_hotspot_qr">Show hotspot QR</string>
