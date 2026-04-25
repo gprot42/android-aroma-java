@@ -131,7 +131,8 @@ Usage 📖
 * 4.The app will generate a public ngrok URL—share or use it in a browser.
 * 5.Access the device remotely at http://localhost:8080 (local) or the ngrok URL (remote).
 * 5a.On macOS, you can also use **Finder → Go → Connect to Server…** and enter the local URL shown by the app to browse and copy files both directions.
-* 5b.For **FlyingCarpet** or similar no-network tools, share files **to AROMA** from the sender, or long-press a file inside AROMA and choose **Share** to send it back out through Android’s share sheet.
+* 5b.For **FlyingCarpet** or similar no-network tools, share files **to AROMA** from the sender, or long-press a file inside AROMA and choose **Share** to send it back out through Android's share sheet.
+* 5c.If uploads fail, open `http://<phone-ip>:8080/_aroma_diag` in your browser to view server-side diagnostic logs with timestamps.
 * 6.You can automate uploading of your file with curl like this
 ```bash
 curl -u admin:password -F "uploadedFile=@/Users/myuser/Downloads/app-release.apk" http://192.168.1.67:8080/
@@ -144,6 +145,7 @@ curl -u admin:password -F "uploadedFile=@/Users/myuser/Downloads/app-release.apk
 * View app logs: adb logcat | grep com.example.aroma or adb logcat *:E for errors.
 * Test connectivity: adb shell ping google.com
 * Interact with filesystem: adb shell ls /sdcard/Download
+* Server diagnostics: Visit `http://<phone-ip>:8080/_aroma_diag` in a browser to see recent upload errors and server events with timestamps.
 
 ---
 
