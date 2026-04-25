@@ -15,11 +15,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 public class WebServer extends NanoHTTPD {
     private final File rootDir;
@@ -34,6 +38,7 @@ public class WebServer extends NanoHTTPD {
         this.context = ctx;
         this.username = username;
         this.password = password;
+        setTempFileManagerFactory(new RootTempFileManagerFactory(wwwRoot));
     }
 
     @Override
@@ -97,6 +102,10 @@ public class WebServer extends NanoHTTPD {
             currentDir = new File(rootDir, uri.substring(1));
         }
 
+        if (isWebDavMethod(method)) {
+            return handleWebDav(session, currentDir, uri);
+        }
+
         if (uri.equals("/terminal")) {
             if (method == Method.GET) {
                 return serveTerminal();
@@ -114,10 +123,22 @@ public class WebServer extends NanoHTTPD {
                 eventListener.onClientConnected(getClientIp(session));
             }
             return handleGet(session, currentDir, uri);
+        } else if (method == Method.HEAD) {
+            return handleHead(currentDir, session);
         } else if (method == Method.POST) {
             return handlePost(session, currentDir, uri);
         }
         return newFixedLengthResponse(Response.Status.METHOD_NOT_ALLOWED, "text/plain", "Method not allowed");
+    }
+
+    private boolean isWebDavMethod(Method method) {
+        return method == Method.OPTIONS
+                || method == Method.PROPFIND
+                || method == Method.MKCOL
+                || method == Method.MOVE
+                || method == Method.COPY
+                || method == Method.PUT
+                || method == Method.DELETE;
     }
 
     private Response handleGet(IHTTPSession session, File file, String uri) {
@@ -148,6 +169,7 @@ public class WebServer extends NanoHTTPD {
         html.append(".panel h2{margin:0 0 15px 0;font-size:1.1em;color:#4da6ff;border-bottom:1px solid var(--input-border);padding-bottom:10px}");
         html.append(".file-list{background:var(--panel);border:var(--panel-border);border-radius:12px;overflow:hidden}");
         html.append(".file-item{display:flex;align-items:center;padding:12px 15px;border-bottom:1px solid var(--item-border);cursor:context-menu}");
+        html.append(".file-item.drag-over{outline:2px solid #4da6ff;background:var(--hover)}");
         html.append(".file-item:last-child{border-bottom:none}");
         html.append(".file-item:hover{background:var(--hover)}");
         html.append(".file-item.selected{background:var(--hover)}");
@@ -240,7 +262,11 @@ public class WebServer extends NanoHTTPD {
                 String name = f.getName();
                 String link = uri + (uri.endsWith("/") ? "" : "/") + name;
                 String escapedName = escapeHtml(name).replace("'", "\\'");
-                html.append("<div class='file-item' oncontextmenu='showContextMenu(event,\"").append(escapedName).append("\",").append(f.isDirectory()).append(",\"").append(link).append("\")' data-name='").append(escapeHtml(name)).append("' data-size='").append(f.isDirectory() ? 0 : f.length()).append("' data-modified='").append(f.lastModified()).append("'>");
+                html.append("<div class='file-item' draggable='true' ondragstart='handleDragStart(event,\"").append(escapedName).append("\")' ");
+                if (f.isDirectory()) {
+                    html.append("ondragover='handleDragOver(event)' ondragleave='handleDragLeave(event)' ondrop='handleDrop(event,\"").append(escapedName).append("\")' ");
+                }
+                html.append("oncontextmenu='showContextMenu(event,\"").append(escapedName).append("\",").append(f.isDirectory()).append(",\"").append(link).append("\")' data-name='").append(escapeHtml(name)).append("' data-size='").append(f.isDirectory() ? 0 : f.length()).append("' data-modified='").append(f.lastModified()).append("'>");
                 html.append("<input type='checkbox' name='selected' value='").append(escapeHtml(name)).append("'>");
                 if (f.isDirectory()) {
                     html.append("<span class='file-icon'>&#128193;</span>");
@@ -353,7 +379,7 @@ public class WebServer extends NanoHTTPD {
         html.append("<div class='modal-content' style='max-width:400px'>");
         html.append("<button class='close-btn' onclick='hideModal(\"createFolderModal\")'>&times;</button>");
         html.append("<h2>Create New Folder</h2>");
-        html.append("<form method='post'>");
+        html.append("<form method='post' onsubmit='return submitManagementForm(this)'>");
         html.append("<input type='hidden' name='action' value='create_folder'>");
         html.append("<div class='form-group'>");
         html.append("<input type='text' name='folder_name' id='newFolderName' placeholder='Folder name' autofocus>");
@@ -367,7 +393,7 @@ public class WebServer extends NanoHTTPD {
         html.append("<div class='modal-content' style='max-width:400px'>");
         html.append("<button class='close-btn' onclick='hideModal(\"renameModal\")'>&times;</button>");
         html.append("<h2>Rename</h2>");
-        html.append("<form method='post'>");
+        html.append("<form method='post' onsubmit='return submitManagementForm(this)'>");
         html.append("<input type='hidden' name='action' value='rename'>");
         html.append("<input type='hidden' name='selected' id='renameOldName'>");
         html.append("<div class='form-group'>");
@@ -423,18 +449,24 @@ public class WebServer extends NanoHTTPD {
         html.append("function updateContextMenuItems(emptyArea){let items=document.querySelectorAll('.context-menu-item');items.forEach(item=>{let t=item.textContent.trim();if(emptyArea){item.style.display=(t.includes('New Folder'))?'flex':'none'}else{item.style.display='flex'}})}");
         html.append("document.addEventListener('click',()=>document.getElementById('contextMenu').classList.remove('show'));");
         html.append("document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show'));document.getElementById('contextMenu').classList.remove('show')}if(e.ctrlKey&&e.key==='a'){e.preventDefault();selectAll()}});");
-        html.append("function openItem(){window.location.href=currentItem.link+(currentItem.isDir?'/':'')}");
-        html.append("function downloadItem(){if(!currentItem.isDir)window.location.href=currentItem.link+'?download'}");
+        html.append("function openItem(){let href=currentItem.link+(currentItem.isDir?'/':'');if(isUploading){window.open(href,'_blank');return}window.location.href=href}");
+        html.append("function downloadItem(){if(!currentItem.isDir){let href=currentItem.link+'?download';if(isUploading){window.open(href,'_blank');return}window.location.href=href}}");
         html.append("function previewItem(){if(!currentItem.isDir)window.open(currentItem.link+'?preview','_blank')}");
         html.append("function showRenameModal(){document.getElementById('renameOldName').value=currentItem.name;document.getElementById('renameCurrentDisplay').textContent=currentItem.name;document.getElementById('renameNewName').value=currentItem.name;showModal('renameModal');document.getElementById('renameNewName').select()}");
         html.append("function copyPath(){navigator.clipboard.writeText(window.location.origin+currentItem.link).then(()=>alert('Path copied!'))}");
-        html.append("function deleteItem(){if(confirm('Delete \"'+currentItem.name+'\"?')){let f=document.createElement('form');f.method='post';f.innerHTML='<input name=\"action\" value=\"delete\"><input name=\"selected\" value=\"'+currentItem.name+'\">';document.body.appendChild(f);f.submit()}}");
+        html.append("let draggedItemName=null;");
+        html.append("function handleDragStart(e,name){draggedItemName=name;e.dataTransfer.setData('text/plain',name);e.dataTransfer.effectAllowed='move'}");
+        html.append("function handleDragOver(e){e.preventDefault();e.currentTarget.classList.add('drag-over')}");
+        html.append("function handleDragLeave(e){e.currentTarget.classList.remove('drag-over')}");
+        html.append("function handleDrop(e,targetFolder){e.preventDefault();e.currentTarget.classList.remove('drag-over');let checked=document.querySelectorAll('input[name=selected]:checked');let names=checked.length>0?Array.from(checked).map(c=>c.value):(draggedItemName?[draggedItemName]:[]);if(names.length===0)return;if(names.includes(targetFolder)){alert('Cannot move a folder into itself');return}document.body.dataset.allowNavigate='true';let form=document.createElement('form');form.method='post';if(isUploading)form.target='_blank';form.innerHTML='<input name=\"action\" value=\"move\"><input name=\"target_folder\" value=\"'+targetFolder.replace(/\"/g,'&quot;')+'\">';names.forEach(n=>{let input=document.createElement('input');input.type='hidden';input.name='selected';input.value=n;form.appendChild(input)});document.body.appendChild(form);form.submit()}");
+        html.append("function deleteItem(){if(confirm('Delete \"'+currentItem.name+'\"?')){document.body.dataset.allowNavigate='true';let f=document.createElement('form');f.method='post';if(isUploading)f.target='_blank';f.innerHTML='<input name=\"action\" value=\"delete\"><input name=\"selected\" value=\"'+currentItem.name+'\">';document.body.appendChild(f);f.submit()}}");
         html.append("function createFolderFromMenu(){showModal('createFolderModal');document.getElementById('newFolderName').focus()}");
         html.append("function selectAll(){document.querySelectorAll('input[name=selected]').forEach(c=>{c.checked=true});updateFileInfoPanel()}");
         html.append("function selectNone(){document.querySelectorAll('input[name=selected]').forEach(c=>{c.checked=false});updateFileInfoPanel()}");
-        html.append("function downloadSelected(){let checked=document.querySelectorAll('input[name=selected]:checked');if(checked.length===0){alert('No files selected');return}let files=Array.from(checked).map(c=>c.value);let form=document.createElement('form');form.method='POST';form.action=window.location.pathname+'?downloadzip';files.forEach(f=>{let input=document.createElement('input');input.type='hidden';input.name='selected';input.value=f;form.appendChild(input)});document.body.appendChild(form);form.submit()}");
+        html.append("function downloadSelected(){let checked=document.querySelectorAll('input[name=selected]:checked');if(checked.length===0){alert('No files selected');return}document.body.dataset.allowNavigate='true';let files=Array.from(checked).map(c=>c.value);let form=document.createElement('form');form.method='POST';form.action=window.location.pathname+'?downloadzip';if(isUploading)form.target='_blank';files.forEach(f=>{let input=document.createElement('input');input.type='hidden';input.name='selected';input.value=f;form.appendChild(input)});document.body.appendChild(form);form.submit()}");
         html.append("function updateFileInfoPanel(){let checked=document.querySelectorAll('input[name=selected]:checked');let panel=document.getElementById('fileInfoPanel');let content=document.getElementById('fileInfoContent');if(checked.length===0){panel.style.display='none';return}panel.style.display='block';if(checked.length===1){let name=checked[0].value;let item=checked[0].closest('.file-item');let meta=item.querySelector('.file-meta');let size=meta?meta.textContent:'';content.innerHTML='<strong>'+name+'</strong><br>'+size}else{let totalSize=0;checked.forEach(c=>{let d=fileData[c.value];if(d&&d.size)totalSize+=d.size});content.innerHTML=checked.length+' items selected<br>Total: '+formatSize(totalSize)}}");
         html.append("function formatSize(b){if(b<=0)return'0 B';let u=['B','KB','MB','GB','TB'];let i=Math.floor(Math.log(b)/Math.log(1024));return(b/Math.pow(1024,i)).toFixed(1)+' '+u[i]}");
+        html.append("function submitManagementForm(form){document.body.dataset.allowNavigate='true';if(isUploading){form.target='_blank'}return true}");
         html.append("document.querySelectorAll('input[name=selected]').forEach(c=>c.addEventListener('change',updateFileInfoPanel));");
         html.append("document.querySelectorAll('.file-item').forEach(item=>{let n=item.dataset.name;let s=parseInt(item.dataset.size)||0;let m=parseInt(item.dataset.modified)||0;fileData[n]={size:s,modified:m}});");
         html.append("let activeInput=null;let uploadFiles=[];let addedFolders=[];let pickedFiles=[];let sessionKey='aroma_upload_'+window.location.pathname;");
@@ -447,20 +479,21 @@ public class WebServer extends NanoHTTPD {
         html.append("function updateFileStatus(){let sf=document.getElementById('selectedFiles');let btn=document.getElementById('uploadBtn');let clr=document.getElementById('clearSelBtn');uploadFiles=rebuildUploadList();let count=uploadFiles.length;if(count>0){let totalSize=uploadFiles.reduce((a,f)=>a+f.size,0);let folderNames=addedFolders.map(fs=>{let p=fs[0]&&fs[0].webkitRelativePath;return p?p.split('/')[0]:'(folder)'});let uploaded=getUploadedFiles();let alreadyUploaded=uploadFiles.filter(f=>{let fn=f.webkitRelativePath||f.name;return uploaded[fn]&&uploaded[fn].size===f.size}).length;let info=count+' file(s) ('+formatSize(totalSize)+')';if(folderNames.length>0)info+='<br>Folders ('+folderNames.length+'): '+folderNames.join(', ');if(pickedFiles.length>0)info+='<br>'+pickedFiles.length+' individual file(s)';if(alreadyUploaded>0){info+='<br><span style=\"color:#4da6ff\">'+alreadyUploaded+' already uploaded - will resume remaining '+(count-alreadyUploaded)+'</span>'}sf.innerHTML=info;btn.disabled=false;btn.textContent=alreadyUploaded>0?'Resume Upload':'Upload';clr.style.display='inline-block'}else{sf.textContent='';btn.disabled=true;btn.textContent='Upload';clr.style.display='none'}}");
         html.append("document.getElementById('fileInput').addEventListener('change',function(){pickedFiles=pickedFiles.concat(Array.from(this.files));this.value='';updateFileStatus()});");
         html.append("document.getElementById('folderInput').addEventListener('change',function(){let fs=Array.from(this.files);if(fs.length>0){let root=fs[0].webkitRelativePath?fs[0].webkitRelativePath.split('/')[0]:null;let dup=root&&addedFolders.some(f=>f[0]&&f[0].webkitRelativePath&&f[0].webkitRelativePath.split('/')[0]===root);if(!dup)addedFolders.push(fs)}this.value='';updateFileStatus()});");
-        html.append("const CONCURRENCY=8;const MAX_RETRIES=4;const RETRY_DELAYS=[500,1500,3000,6000];let isUploading=false;let pendingFailures=[];");
-        html.append("window.addEventListener('beforeunload',function(e){if(isUploading){e.preventDefault();e.returnValue='Upload in progress. Are you sure you want to leave?';return e.returnValue}});");
+        html.append("const DEFAULT_CONCURRENCY=4;const LARGE_UPLOAD_CONCURRENCY=2;const LARGE_UPLOAD_BYTES=2*1024*1024*1024;const MAX_RETRIES=4;const RETRY_DELAYS=[500,1500,3000,6000];let isUploading=false;let pendingFailures=[];");
+        html.append("window.addEventListener('beforeunload',function(e){let navigating=document.body.dataset.allowNavigate==='true';if(isUploading&&!navigating){e.preventDefault();e.returnValue='Upload in progress. Are you sure you want to leave?';return e.returnValue}});");
         html.append("function isRetryable(status){return status===0||status===408||status===409||status===425||status===429||(status>=500&&status<600)}");
         html.append("function sleep(ms){return new Promise(r=>setTimeout(r,ms))}");
-        html.append("async function runUpload(filesIn,overwrite,isRetryPass){if(!filesIn||filesIn.length===0)return{success:0,skipped:0,failed:[]};let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');let pct=document.getElementById('progressPercent');let txt=document.getElementById('progressText');let spd=document.getElementById('progressSpeed');btn.disabled=true;btn.textContent=isRetryPass?'Retrying...':'Uploading...';prog.style.display='block';let uploaded=getUploadedFiles();let filesToUpload=isRetryPass?filesIn.slice():filesIn.filter(f=>{let fn=f.webkitRelativePath||f.name;return!uploaded[fn]||uploaded[fn].size!==f.size||overwrite});let skippedPrev=isRetryPass?0:(filesIn.length-filesToUpload.length);let totalFiles=filesToUpload.length;let totalBytes=filesToUpload.reduce((a,f)=>a+f.size,0);let uploadedBytes=0;let uploadedFiles=0;let success=0;let skipped=0;let failed=[];let queue=filesToUpload.map(f=>({file:f,attempt:0}));let startTime=Date.now();function updateProgress(){let p=totalBytes>0?(uploadedBytes/totalBytes*100):0;bar.style.width=p+'%';pct.textContent=Math.round(p)+'%';txt.textContent=uploadedFiles+' / '+totalFiles+' files ('+formatSize(uploadedBytes)+' / '+formatSize(totalBytes)+')';let elapsed=(Date.now()-startTime)/1000;let speed=elapsed>0?uploadedBytes/elapsed:0;spd.textContent='Speed: '+formatSize(speed)+'/s'+(skippedPrev>0?' | Resumed: '+skippedPrev+' skipped':'')+(isRetryPass?' | Retrying failed items':'')}");
+        html.append("async function runUpload(filesIn,overwrite,isRetryPass){if(!filesIn||filesIn.length===0)return{success:0,skipped:0,failed:[]};let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');let pct=document.getElementById('progressPercent');let txt=document.getElementById('progressText');let spd=document.getElementById('progressSpeed');btn.disabled=true;btn.textContent=isRetryPass?'Retrying...':'Uploading...';prog.style.display='block';let uploaded=getUploadedFiles();let filesToUpload=isRetryPass?filesIn.slice():filesIn.filter(f=>{let fn=f.webkitRelativePath||f.name;return!uploaded[fn]||uploaded[fn].size!==f.size||overwrite});let skippedPrev=isRetryPass?0:(filesIn.length-filesToUpload.length);let totalFiles=filesToUpload.length;let totalBytes=filesToUpload.reduce((a,f)=>a+f.size,0);let concurrency=totalBytes>=LARGE_UPLOAD_BYTES?LARGE_UPLOAD_CONCURRENCY:DEFAULT_CONCURRENCY;let uploadedBytes=0;let uploadedFiles=0;let success=0;let skipped=0;let failed=[];let queue=filesToUpload.map(f=>({file:f,attempt:0}));let startTime=Date.now();function updateProgress(){let p=totalBytes>0?(uploadedBytes/totalBytes*100):0;bar.style.width=p+'%';pct.textContent=Math.round(p)+'%';txt.textContent=uploadedFiles+' / '+totalFiles+' files ('+formatSize(uploadedBytes)+' / '+formatSize(totalBytes)+')';let elapsed=(Date.now()-startTime)/1000;let speed=elapsed>0?uploadedBytes/elapsed:0;spd.textContent='Speed: '+formatSize(speed)+'/s'+(skippedPrev>0?' | Resumed: '+skippedPrev+' skipped':'')+(isRetryPass?' | Retrying failed items':'')+' | Parallel: '+concurrency}");
         html.append("function uploadOnce(file,forceOverwrite){return new Promise((resolve)=>{let fname=file.webkitRelativePath||file.name;let fd=new FormData();fd.append('uploadedFile',file,fname);fd.append('originalPath',fname);if(overwrite||forceOverwrite)fd.append('overwrite','true');let xhr=new XMLHttpRequest();xhr.timeout=300000;let attemptBytes=0;xhr.upload.onprogress=function(e){if(e.lengthComputable){let delta=e.loaded-attemptBytes;attemptBytes=e.loaded;uploadedBytes+=delta;updateProgress()}};xhr.onload=function(){if(xhr.status>=200&&xhr.status<300){resolve({ok:true,status:xhr.status})}else if(xhr.responseText&&xhr.responseText.includes('already exists')){uploadedBytes-=attemptBytes;resolve({ok:true,status:xhr.status,alreadyExists:true})}else{uploadedBytes-=attemptBytes;let reason='HTTP '+xhr.status;if(xhr.responseText){let t=xhr.responseText;if(t.includes('permission'))reason='Permission denied';else if(t.includes('directory'))reason='Cannot create directory';else if(t.includes('temp file'))reason='Temp file error';else if(t.includes('storage'))reason='Storage full or unavailable';else if(t.length<100)reason=t.replace(/<[^>]*>/g,'').trim()||reason}resolve({ok:false,status:xhr.status,reason:reason})}};xhr.onerror=function(){uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Network error'})};xhr.ontimeout=function(){uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:408,reason:'Request timed out'})};xhr.onabort=function(){uploadedBytes-=attemptBytes;if(uploadedBytes<0)uploadedBytes=0;resolve({ok:false,status:0,reason:'Aborted'})};xhr.open('POST',window.location.pathname);xhr.send(fd)})}");
         html.append("async function uploadWithRetry(file){let fname=file.webkitRelativePath||file.name;let lastReason='Unknown';for(let attempt=0;attempt<=MAX_RETRIES;attempt++){let r=await uploadOnce(file,isRetryPass||attempt>0);if(r.ok){if(r.alreadyExists){skipped++}else{success++;saveUploadedFile(fname,file.size)}return{ok:true}}lastReason=r.reason;if(!isRetryable(r.status)){return{ok:false,reason:lastReason,fatal:true}}if(attempt<MAX_RETRIES){let d=RETRY_DELAYS[Math.min(attempt,RETRY_DELAYS.length-1)];await sleep(d)}}return{ok:false,reason:lastReason+' (after '+MAX_RETRIES+' retries)',fatal:false}}");
         html.append("async function worker(){while(queue.length>0){let item=queue.shift();if(!item)continue;let r=await uploadWithRetry(item.file);if(!r.ok){failed.push({file:item.file,name:item.file.webkitRelativePath||item.file.name,reason:r.reason})}uploadedFiles++;updateProgress()}}");
         html.append("if(totalFiles===0){btn.textContent='Upload';btn.disabled=false;prog.style.display='none';if(!isRetryPass)alert('All '+skippedPrev+' files already uploaded!');return{success:0,skipped:skippedPrev,failed:[]}}");
-        html.append("let workers=[];for(let i=0;i<CONCURRENCY;i++)workers.push(worker());await Promise.all(workers);return{success:success,skipped:skipped+skippedPrev,failed:failed}}");
+        html.append("let workers=[];for(let i=0;i<concurrency;i++)workers.push(worker());await Promise.all(workers);return{success:success,skipped:skipped+skippedPrev,failed:failed}}");
         html.append("function updateRetryButton(){let btn=document.getElementById('retryFailedBtn');if(!btn)return;if(pendingFailures.length>0){btn.style.display='inline-block';btn.textContent='Retry '+pendingFailures.length+' Failed'}else{btn.style.display='none'}}");
         html.append("async function retryFailed(){if(pendingFailures.length===0||isUploading)return;isUploading=true;let files=pendingFailures.map(f=>f.file);pendingFailures=[];updateRetryButton();let res=await runUpload(files,true,true);finalizeUpload(res,true)}");
         html.append("function finalizeUpload(res,wasRetry){isUploading=false;let btn=document.getElementById('uploadBtn');let prog=document.getElementById('uploadProgress');let bar=document.getElementById('progressBar');btn.textContent='Upload';btn.disabled=uploadFiles.length===0;prog.style.display='none';bar.style.width='0%';pendingFailures=res.failed||[];updateRetryButton();let msg=(wasRetry?'Retry pass complete\\n':'')+'Uploaded: '+res.success;if(res.skipped>0)msg+='\\nSkipped/resumed: '+res.skipped;if(pendingFailures.length>0){msg+='\\nStill failing: '+pendingFailures.length+'\\n';pendingFailures.forEach(f=>{msg+='\\n  '+f.name+'\\n    Reason: '+f.reason+'\\n'});msg+='\\nClick \"Retry '+pendingFailures.length+' Failed\" to try again.'}alert(msg);if(pendingFailures.length===0){clearUploadSession();history.replaceState(null,'',window.location.pathname);let a=document.createElement('a');a.href=window.location.pathname;document.body.appendChild(a);a.click()}}");
-        html.append("async function startUpload(){if(uploadFiles.length===0||isUploading)return;isUploading=true;pendingFailures=[];updateRetryButton();let overwrite=document.getElementById('overwriteCheck').checked;let res=await runUpload(uploadFiles,overwrite,false);if(res.failed&&res.failed.length>0){let pass2=await runUpload(res.failed.map(f=>f.file),true,true);res.success+=pass2.success;res.skipped+=pass2.skipped;res.failed=pass2.failed}finalizeUpload(res,false)}");
+        html.append("async function startUpload(){if(uploadFiles.length===0||isUploading)return;document.body.dataset.allowNavigate='false';isUploading=true;pendingFailures=[];updateRetryButton();let overwrite=document.getElementById('overwriteCheck').checked;let res=await runUpload(uploadFiles,overwrite,false);if(res.failed&&res.failed.length>0){let pass2=await runUpload(res.failed.map(f=>f.file),true,true);res.success+=pass2.success;res.skipped+=pass2.skipped;res.failed=pass2.failed}finalizeUpload(res,false)}");
+        html.append("document.addEventListener('click',function(e){let anchor=e.target.closest('a');if(!anchor)return;let href=anchor.getAttribute('href');if(!href||href.startsWith('#')||anchor.target==='_blank')return;if(isUploading){e.preventDefault();window.open(anchor.href,'_blank')}},true);");
         html.append("document.querySelector('.file-list').addEventListener('contextmenu',function(e){if(e.target===this||e.target.classList.contains('empty')){showEmptyContextMenu(e)}});");
         html.append("initTheme();");
         html.append("</script>");
@@ -563,6 +596,299 @@ public class WebServer extends NanoHTTPD {
             return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", e.toString());
         }
     }
+
+    private Response handleHead(File file, IHTTPSession session) {
+        if (!file.exists()) {
+            return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "");
+        }
+        Response response = newFixedLengthResponse(Response.Status.OK, file.isDirectory() ? "httpd/unix-directory" : getMimeTypeForFile(file.getName()), "");
+        addCommonHeaders(response);
+        if (!file.isDirectory()) {
+            response.addHeader("Content-Length", String.valueOf(file.length()));
+        }
+        response.addHeader("Accept-Ranges", "bytes");
+        response.addHeader("Last-Modified", formatHttpDate(file.lastModified()));
+        return response;
+    }
+
+    private Response handleWebDav(IHTTPSession session, File currentFile, String uri) {
+        Method method = session.getMethod();
+        if (method == Method.OPTIONS) {
+            Response response = newFixedLengthResponse(Response.Status.OK, "text/plain", "");
+            addWebDavHeaders(response);
+            response.addHeader("Allow", "OPTIONS, GET, HEAD, POST, PUT, DELETE, PROPFIND, MKCOL, MOVE, COPY");
+            return response;
+        }
+        if (method == Method.PROPFIND) {
+            return handlePropfind(session, currentFile, uri);
+        }
+        if (method == Method.MKCOL) {
+            return handleMkcol(currentFile);
+        }
+        if (method == Method.PUT) {
+            return handlePut(session, currentFile);
+        }
+        if (method == Method.DELETE) {
+            return handleDelete(currentFile, session);
+        }
+        if (method == Method.MOVE) {
+            return handleMoveOrCopy(session, currentFile, false);
+        }
+        if (method == Method.COPY) {
+            return handleMoveOrCopy(session, currentFile, true);
+        }
+        return newFixedLengthResponse(Response.Status.METHOD_NOT_ALLOWED, "text/plain", "Method not allowed");
+    }
+
+    private Response handlePropfind(IHTTPSession session, File currentFile, String uri) {
+        if (!currentFile.exists()) {
+            return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not found");
+        }
+        int depth = 1;
+        String depthHeader = session.getHeaders().get("depth");
+        if (depthHeader != null) {
+            if ("0".equals(depthHeader)) {
+                depth = 0;
+            } else if ("1".equals(depthHeader)) {
+                depth = 1;
+            }
+        }
+        StringBuilder xml = new StringBuilder();
+        xml.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+        xml.append("<D:multistatus xmlns:D=\"DAV:\">");
+        appendPropfindResponse(xml, currentFile, uri);
+        if (depth > 0 && currentFile.isDirectory()) {
+            File[] children = currentFile.listFiles();
+            if (children != null) {
+                java.util.Arrays.sort(children, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+                for (File child : children) {
+                    String childUri = uri.endsWith("/") ? uri + child.getName() : uri + "/" + child.getName();
+                    appendPropfindResponse(xml, child, childUri);
+                }
+            }
+        }
+        xml.append("</D:multistatus>");
+        Response response = newFixedLengthResponse(Response.Status.MULTI_STATUS, "application/xml; charset=utf-8", xml.toString());
+        addWebDavHeaders(response);
+        return response;
+    }
+
+    private void appendPropfindResponse(StringBuilder xml, File file, String uri) {
+        String href = encodeUriForXml(file.isDirectory() && !uri.endsWith("/") ? uri + "/" : uri);
+        xml.append("<D:response>");
+        xml.append("<D:href>").append(href).append("</D:href>");
+        xml.append("<D:propstat><D:prop>");
+        xml.append("<D:displayname>").append(escapeXml(file.getName().isEmpty() ? "/" : file.getName())).append("</D:displayname>");
+        xml.append("<D:resourcetype>");
+        if (file.isDirectory()) {
+            xml.append("<D:collection/>");
+        }
+        xml.append("</D:resourcetype>");
+        xml.append("<D:getlastmodified>").append(formatHttpDate(file.lastModified())).append("</D:getlastmodified>");
+        if (!file.isDirectory()) {
+            xml.append("<D:getcontentlength>").append(file.length()).append("</D:getcontentlength>");
+            xml.append("<D:getcontenttype>").append(escapeXml(getMimeTypeForFile(file.getName()))).append("</D:getcontenttype>");
+        }
+        xml.append("</D:prop><D:status>HTTP/1.1 200 OK</D:status></D:propstat>");
+        xml.append("</D:response>");
+    }
+
+    private Response handleMkcol(File currentFile) {
+        if (currentFile.exists()) {
+            Response response = newFixedLengthResponse(Response.Status.METHOD_NOT_ALLOWED, "text/plain", "Already exists");
+            addWebDavHeaders(response);
+            return response;
+        }
+        if (currentFile.mkdirs()) {
+            Response response = newFixedLengthResponse(Response.Status.CREATED, "text/plain", "");
+            addWebDavHeaders(response);
+            return response;
+        }
+        Response response = newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain", "Cannot create folder");
+        addWebDavHeaders(response);
+        return response;
+    }
+
+    private Response handlePut(IHTTPSession session, File currentFile) {
+        Map<String, String> parsedFiles = new HashMap<>();
+        try {
+            session.parseBody(parsedFiles);
+            String tempPath = parsedFiles.get("content");
+            if (tempPath == null) {
+                tempPath = parsedFiles.get("postData");
+            }
+            if (tempPath == null) {
+                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Missing upload body");
+            }
+            File tempFile = new File(tempPath);
+            File parent = currentFile.getParentFile();
+            if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                return newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain", "Cannot create parent directory");
+            }
+            boolean existed = currentFile.exists();
+            try (FileInputStream fis = new FileInputStream(tempFile);
+                 FileOutputStream fos = new FileOutputStream(currentFile);
+                 FileChannel inCh = fis.getChannel();
+                 FileChannel outCh = fos.getChannel()) {
+                long size = inCh.size();
+                long pos = 0;
+                while (pos < size) {
+                    long written = inCh.transferTo(pos, size - pos, outCh);
+                    if (written <= 0) {
+                        break;
+                    }
+                    pos += written;
+                }
+                outCh.force(true);
+            }
+            MediaScannerConnection.scanFile(context, new String[]{currentFile.getAbsolutePath()}, null, null);
+            if (eventListener != null) {
+                eventListener.onFileUploaded(currentFile.getName(), getClientIp(session));
+            }
+            Response response = newFixedLengthResponse(existed ? Response.Status.OK : Response.Status.CREATED, "text/plain", "");
+            addWebDavHeaders(response);
+            return response;
+        } catch (Exception e) {
+            Log.e("AROMA", "WebDAV PUT failed: " + e.getMessage());
+            Response response = newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", e.getMessage());
+            addWebDavHeaders(response);
+            return response;
+        }
+    }
+
+    private Response handleDelete(File currentFile, IHTTPSession session) {
+        if (!currentFile.exists()) {
+            return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not found");
+        }
+        boolean deleted = deleteRecursively(currentFile);
+        if (deleted && eventListener != null) {
+            eventListener.onFileDeleted(currentFile.getName(), getClientIp(session));
+        }
+        Response response = newFixedLengthResponse(deleted ? Response.Status.NO_CONTENT : Response.Status.FORBIDDEN, "text/plain", "");
+        addWebDavHeaders(response);
+        return response;
+    }
+
+    private Response handleMoveOrCopy(IHTTPSession session, File source, boolean copyOnly) {
+        if (!source.exists()) {
+            return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not found");
+        }
+        String destinationHeader = session.getHeaders().get("destination");
+        if (destinationHeader == null || destinationHeader.isEmpty()) {
+            return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Missing destination");
+        }
+        String destinationPath = normalizeDestinationPath(destinationHeader);
+        if (destinationPath == null || destinationPath.contains("..")) {
+            return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "Invalid destination");
+        }
+        File destination = destinationPath.equals("/") ? rootDir : new File(rootDir, destinationPath.substring(1));
+        File parent = destination.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            return newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain", "Cannot create destination directory");
+        }
+        boolean existed = destination.exists();
+        try {
+            if (source.isDirectory()) {
+                copyDirectory(source, destination);
+                if (!copyOnly) {
+                    deleteRecursively(source);
+                }
+            } else {
+                copyFile(source, destination);
+                if (!copyOnly && !source.delete()) {
+                    return newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain", "Cannot remove source");
+                }
+            }
+            MediaScannerConnection.scanFile(context, new String[]{destination.getAbsolutePath()}, null, null);
+            Response response = newFixedLengthResponse(existed ? Response.Status.NO_CONTENT : Response.Status.CREATED, "text/plain", "");
+            addWebDavHeaders(response);
+            return response;
+        } catch (IOException e) {
+            Log.e("AROMA", "WebDAV move/copy failed: " + e.getMessage());
+            Response response = newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", e.getMessage());
+            addWebDavHeaders(response);
+            return response;
+        }
+    }
+
+    private void copyDirectory(File source, File destination) throws IOException {
+        if (!destination.exists() && !destination.mkdirs()) {
+            throw new IOException("Cannot create directory");
+        }
+        File[] children = source.listFiles();
+        if (children == null) {
+            return;
+        }
+        for (File child : children) {
+            File target = new File(destination, child.getName());
+            if (child.isDirectory()) {
+                copyDirectory(child, target);
+            } else {
+                copyFile(child, target);
+            }
+        }
+    }
+
+    private void copyFile(File source, File destination) throws IOException {
+        try (FileInputStream fis = new FileInputStream(source);
+             FileOutputStream fos = new FileOutputStream(destination);
+             FileChannel inCh = fis.getChannel();
+             FileChannel outCh = fos.getChannel()) {
+            long size = inCh.size();
+            long pos = 0;
+            while (pos < size) {
+                long written = inCh.transferTo(pos, size - pos, outCh);
+                if (written <= 0) {
+                    break;
+                }
+                pos += written;
+            }
+            outCh.force(true);
+        }
+    }
+
+    private String normalizeDestinationPath(String destinationHeader) {
+        try {
+            java.net.URI destinationUri = java.net.URI.create(destinationHeader);
+            String path = destinationUri.getPath();
+            if (path == null || path.isEmpty()) {
+                return "/";
+            }
+            return path;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private void addCommonHeaders(Response response) {
+        response.addHeader("Accept-Ranges", "bytes");
+        response.addHeader("MS-Author-Via", "DAV");
+    }
+
+    private void addWebDavHeaders(Response response) {
+        addCommonHeaders(response);
+        response.addHeader("DAV", "1");
+        response.addHeader("Allow", "OPTIONS, GET, HEAD, POST, PUT, DELETE, PROPFIND, MKCOL, MOVE, COPY");
+    }
+
+    private String formatHttpDate(long timeMillis) {
+        SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+        format.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return format.format(new Date(timeMillis));
+    }
+
+    private String encodeUriForXml(String uri) {
+        return escapeXml(uri.replace(" ", "%20"));
+    }
+
+    private String escapeXml(String text) {
+        return text
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&apos;");
+    }
     
     private String escapeHtml(String text) {
         return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
@@ -651,8 +977,8 @@ public class WebServer extends NanoHTTPD {
                 return buildErrorResponse("Create Folder Failed", "Please enter a folder name.", uri);
             }
             String folderName = folderNames.get(0).trim();
-            if (folderName.contains("/") || folderName.contains("\\") || folderName.contains("..")) {
-                return buildErrorResponse("Create Folder Failed", "Invalid folder name. Cannot contain / \\ or ..", uri);
+            if (folderName.contains("/") || folderName.contains("\\") || folderName.equals(".") || folderName.equals("..")) {
+                return buildErrorResponse("Create Folder Failed", "Invalid folder name. Cannot contain / \\ or be . or ..", uri);
             }
             File newFolder = new File(currentDir, folderName);
             if (newFolder.exists()) {
@@ -679,8 +1005,8 @@ public class WebServer extends NanoHTTPD {
             }
             String selected = selectedList.get(0).trim();
             String newName = newNameList.get(0).trim();
-            if (newName.contains("/") || newName.contains("\\") || newName.contains("..")) {
-                return buildErrorResponse("Rename Failed", "Invalid new name. Cannot contain / \\ or ..", uri);
+            if (newName.contains("/") || newName.contains("\\") || newName.equals(".") || newName.equals("..")) {
+                return buildErrorResponse("Rename Failed", "Invalid new name. Cannot contain / \\ or be . or ..", uri);
             }
             File toRename = new File(currentDir, selected);
             if (!toRename.exists()) {
@@ -697,6 +1023,50 @@ public class WebServer extends NanoHTTPD {
             }
         }
 
+        if (params.containsKey("action") && "move".equals(params.get("action").get(0))) {
+            List<String> selected = params.get("selected");
+            List<String> targetFolders = params.get("target_folder");
+            if (selected == null || selected.isEmpty() || targetFolders == null || targetFolders.isEmpty()) {
+                return buildErrorResponse("Move Failed", "Missing source or destination.", uri);
+            }
+            String targetFolder = targetFolders.get(0);
+            if (targetFolder.equals(".") || targetFolder.equals("..") || targetFolder.contains("\\") || targetFolder.startsWith("/")) {
+                return buildErrorResponse("Move Failed", "Invalid target folder.", uri);
+            }
+            File destinationFolder = new File(currentDir, targetFolder);
+            if (!destinationFolder.exists() || !destinationFolder.isDirectory()) {
+                return buildErrorResponse("Move Failed", "Target folder not found.", uri);
+            }
+            StringBuilder results = new StringBuilder();
+            int successCount = 0;
+            int failCount = 0;
+            for (String name : selected) {
+                File source = new File(currentDir, name);
+                File destination = new File(destinationFolder, source.getName());
+                if (!source.exists()) {
+                    results.append("Not found: ").append(name).append("\n");
+                    failCount++;
+                    continue;
+                }
+                if (destination.exists()) {
+                    results.append("Already exists in target: ").append(name).append("\n");
+                    failCount++;
+                    continue;
+                }
+                if (source.renameTo(destination)) {
+                    results.append("Moved: ").append(name).append("\n");
+                    successCount++;
+                } else {
+                    results.append("Failed to move: ").append(name).append("\n");
+                    failCount++;
+                }
+            }
+            if (failCount == 0) {
+                return redirectResponse(uri);
+            }
+            return buildResultResponse("Move Completed", "Moved: " + successCount + ", Failed: " + failCount, results.toString(), uri, false);
+        }
+
         // Handle upload (supports multiple files and folder uploads)
         List<String> uploadedFileNames = new ArrayList<>();
         List<String> failedFiles = new ArrayList<>();
@@ -710,14 +1080,11 @@ public class WebServer extends NanoHTTPD {
             if (!key.startsWith("uploadedFile")) continue;
             
             String tempLocation = files.get(key);
-            List<String> paramValues = session.getParameters().get(key);
-            if (paramValues == null || paramValues.isEmpty()) continue;
-            
             // Try to get the original path from the separate form field (better UTF-8 handling)
             List<String> originalPathValues = session.getParameters().get("originalPath");
             String originalName = (originalPathValues != null && !originalPathValues.isEmpty()) 
                 ? originalPathValues.get(0) 
-                : paramValues.get(0);
+                : key;
             if (originalName == null || originalName.isEmpty()) continue;
             
             // Skip hidden/system files
@@ -730,7 +1097,8 @@ public class WebServer extends NanoHTTPD {
             
             // Handle folder structure (webkitRelativePath includes folder/file.ext)
             String targetPath = originalName.replace("\\", "/");
-            if (targetPath.contains("..") || targetPath.startsWith("/")) {
+            if (targetPath.startsWith("/") || targetPath.equals(".") || targetPath.equals("..")
+                    || targetPath.contains("/../") || targetPath.startsWith("../") || targetPath.endsWith("/..")) {
                 failedFiles.add(originalName + " (invalid path)");
                 continue;
             }
@@ -794,7 +1162,11 @@ public class WebServer extends NanoHTTPD {
                 totalSize += targetFile.length();
             } catch (Exception e) {
                 Log.e("AROMA", "Copy failed for " + originalName + ": " + e.getMessage());
-                failedFiles.add(originalName + " (" + e.getMessage() + ")");
+                String errorMessage = e.getMessage() == null ? "copy failed" : e.getMessage();
+                if (errorMessage.toLowerCase().contains("space") || errorMessage.toLowerCase().contains("storage")) {
+                    errorMessage = "storage full or unavailable";
+                }
+                failedFiles.add(originalName + " (" + errorMessage + ")");
                 if (targetFile.exists()) targetFile.delete();
             } finally {
                 if (tempFile.exists()) tempFile.delete();
@@ -881,6 +1253,75 @@ public class WebServer extends NanoHTTPD {
         final String[] units = {"B", "KB", "MB", "GB", "TB"};
         int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
         return String.format("%.1f %s", size / Math.pow(1024, digitGroups), units[digitGroups]);
+    }
+
+    private static class RootTempFileManagerFactory implements TempFileManagerFactory {
+        private final File rootDir;
+
+        RootTempFileManagerFactory(File rootDir) {
+            this.rootDir = rootDir;
+        }
+
+        @Override
+        public TempFileManager create() {
+            return new RootTempFileManager(rootDir);
+        }
+    }
+
+    private static class RootTempFileManager implements TempFileManager {
+        private final List<TempFile> tempFiles = new ArrayList<>();
+        private final File tempDir;
+
+        RootTempFileManager(File rootDir) {
+            this.tempDir = new File(rootDir, ".aroma-upload-temp");
+            if (!tempDir.exists()) {
+                tempDir.mkdirs();
+            }
+        }
+
+        @Override
+        public void clear() {
+            for (TempFile tempFile : tempFiles) {
+                try {
+                    tempFile.delete();
+                } catch (Exception ignored) {
+                }
+            }
+            tempFiles.clear();
+        }
+
+        @Override
+        public TempFile createTempFile(String filenameHint) throws Exception {
+            File tempFile = File.createTempFile("upload_", ".tmp", tempDir);
+            TempFile wrapper = new RootTempFile(tempFile);
+            tempFiles.add(wrapper);
+            return wrapper;
+        }
+    }
+
+    private static class RootTempFile implements TempFile {
+        private final File file;
+
+        RootTempFile(File file) {
+            this.file = file;
+        }
+
+        @Override
+        public void delete() throws Exception {
+            if (file.exists()) {
+                file.delete();
+            }
+        }
+
+        @Override
+        public String getName() {
+            return file.getAbsolutePath();
+        }
+
+        @Override
+        public OutputStream open() throws Exception {
+            return new FileOutputStream(file);
+        }
     }
 
     private boolean deleteRecursively(File file) {

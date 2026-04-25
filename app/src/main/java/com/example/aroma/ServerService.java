@@ -39,6 +39,7 @@ public class ServerService extends Service {
     private int currentPort;
     private ServerEventListener eventListener;
     private final IBinder binder = new LocalBinder();
+    private volatile String preferredLocalIp;
 
     public class LocalBinder extends Binder {
         ServerService getService() {
@@ -212,6 +213,13 @@ public class ServerService extends Service {
         return publicUrl;
     }
 
+    public void setPreferredLocalIp(String preferredLocalIp) {
+        this.preferredLocalIp = preferredLocalIp;
+        if (currentPort > 0 && preferredLocalIp != null && !preferredLocalIp.isEmpty() && isServerRunning()) {
+            currentUrl = "http://" + preferredLocalIp + ":" + currentPort;
+        }
+    }
+
     public void setEventListener(ServerEventListener listener) {
         this.eventListener = listener;
         if (server != null) {
@@ -251,6 +259,9 @@ public class ServerService extends Service {
     }
 
     private String getLocalIpAddress() {
+        if (preferredLocalIp != null && !preferredLocalIp.isEmpty()) {
+            return preferredLocalIp;
+        }
         try {
             WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
             if (wm != null) {

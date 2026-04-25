@@ -23,6 +23,7 @@ public class SettingsActivity extends Activity {
     private EditText portEdit;
     private CheckBox autoStartCheckbox;
     private CheckBox saveTokenCheckbox;
+    private CheckBox enableHotspotCheckbox;
     private Spinner folderSpinner;
     private Spinner themeSpinner;
     private Button showPasswordButton;
@@ -42,6 +43,7 @@ public class SettingsActivity extends Activity {
         portEdit = findViewById(R.id.port_edit);
         autoStartCheckbox = findViewById(R.id.auto_start_checkbox);
         saveTokenCheckbox = findViewById(R.id.save_token_checkbox);
+        enableHotspotCheckbox = findViewById(R.id.enable_hotspot_checkbox);
         folderSpinner = findViewById(R.id.folder_spinner);
         themeSpinner = findViewById(R.id.theme_spinner);
         showPasswordButton = findViewById(R.id.show_password_button);
@@ -63,6 +65,13 @@ public class SettingsActivity extends Activity {
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        enableHotspotCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (!isInitializing) {
+                credentialsManager.setHotspotEnabled(isChecked);
+                Toast.makeText(this, R.string.settings_saved, Toast.LENGTH_SHORT).show();
+            }
         });
 
         showPasswordButton.setOnClickListener(v -> togglePasswordVisibility());
@@ -179,6 +188,7 @@ public class SettingsActivity extends Activity {
 
         autoStartCheckbox.setTextColor(textSecondary);
         saveTokenCheckbox.setTextColor(textSecondary);
+        enableHotspotCheckbox.setTextColor(textSecondary);
 
         TextView credentialsNote = findViewById(R.id.credentials_note);
         credentialsNote.setTextColor(textMuted);
@@ -210,6 +220,7 @@ public class SettingsActivity extends Activity {
         portEdit.setText(String.valueOf(credentialsManager.getPort()));
         autoStartCheckbox.setChecked(credentialsManager.isAutoStart());
         saveTokenCheckbox.setChecked(credentialsManager.isSaveToken());
+        enableHotspotCheckbox.setChecked(credentialsManager.isHotspotEnabled());
         folderSpinner.setSelection(credentialsManager.getFolderType());
         themeSpinner.setSelection(credentialsManager.getTheme());
     }
@@ -252,6 +263,7 @@ public class SettingsActivity extends Activity {
         credentialsManager.setPort(port);
         credentialsManager.setAutoStart(autoStartCheckbox.isChecked());
         credentialsManager.setSaveToken(saveTokenCheckbox.isChecked());
+        credentialsManager.setHotspotEnabled(enableHotspotCheckbox.isChecked());
         credentialsManager.setFolderType(folderSpinner.getSelectedItemPosition());
         int selectedTheme = themeSpinner.getSelectedItemPosition();
         Log.d("AROMA", "Saving theme: " + selectedTheme + " (0=dark, 1=light)");

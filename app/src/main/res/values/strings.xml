@@ -17,6 +17,20 @@
     <string name="storage_total"> total</string>
     <string name="selected_file">Selected: </string>
     <string name="enter_ngrok_token_prompt">Enter ngrok authtoken for tunneling</string>
+    <string name="share_file">Share file</string>
+    <string name="share_imported">Imported shared file(s)</string>
+    <string name="airdrop_mode_hint">AirDrop-style support uses Android share targets plus Mac Finder/WebDAV where available.</string>
+    <string name="flyingcarpet_hint">No-network transfer: send files to AROMA from FlyingCarpet or share AROMA files back out via Android Share.</string>
+    <string name="flyingcarpet_settings_note">FlyingCarpet compatibility is supported through Android share intents, including no-network transfers initiated by FlyingCarpet.</string>
+    <string name="hotspot_start">Start Hotspot Transfer (no WiFi needed)</string>
+    <string name="hotspot_stop">Stop Hotspot Transfer</string>
+    <string name="hotspot_starting">Starting hotspot…</string>
+    <string name="hotspot_stopped">Hotspot stopped</string>
+    <string name="hotspot_permission_needed">Location / Nearby devices permission is required to start the hotspot</string>
+    <string name="show_hotspot_qr">Show hotspot QR</string>
+    <string name="hide_hotspot_qr">Hide hotspot QR</string>
+    <string name="copy_password">Copy password</string>
+    <string name="password_copied">Password copied</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -38,6 +52,7 @@
     <string name="port_label">Server Port</string>
     <string name="auto_start_server">Auto-start server on app launch</string>
     <string name="save_ngrok_token">Remember ngrok token</string>
+    <string name="enable_hotspot_mode">Enable in-app hotspot tools</string>
     <string name="port_range_error">Port must be between 1024 and 65535</string>
     <string name="port_invalid_error">Invalid port number</string>
     <string name="settings_saved">Settings saved</string>
@@ -62,6 +77,6 @@
     
     <!-- About -->
     <string name="about_section">About</string>
-    <string name="app_version">AROMA v0.0.7</string>
+    <string name="app_version">AROMA v0.0.10</string>
     <string name="app_description">Android Remote Online Management App - Access your device files remotely via web browser.</string>
 </resources>

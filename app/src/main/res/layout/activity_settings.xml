@@ -168,6 +168,15 @@
             android:buttonTint="#4da6ff"
             android:layout_marginBottom="8dp" />
 
+        <CheckBox
+            android:id="@+id/enable_hotspot_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/enable_hotspot_mode"
+            android:textColor="#cccccc"
+            android:buttonTint="#4da6ff"
+            android:layout_marginBottom="8dp" />
+
         <!-- Folder Section -->
         <TextView
             android:id="@+id/folder_label"
@@ -213,6 +222,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/app_description"
+            android:textSize="12sp"
+            android:textColor="#888888" />
+
+        <TextView
+            android:id="@+id/flyingcarpet_note"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/flyingcarpet_settings_note"
             android:textSize="12sp"
             android:textColor="#888888" />
 

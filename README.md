@@ -7,6 +7,8 @@ AROMA is an Android application designed for remote online management of Android
 
 * **Remote access** from any browser using a public URL.
 * **Works on Wi-Fi or mobile data** (overcomes NAT and carrier restrictions on incoming connections).
+* **Mac Finder transfers** over the same local link using WebDAV, for drag-and-drop copy between macOS and Android.
+* **FlyingCarpet-compatible handoff** through Android sharing, so AROMA can receive files from FlyingCarpet and share files back out even when FlyingCarpet is using a no-infrastructure transfer path.
 * **Simple setup** with a free ngrok account for basic usage; paid plans offer static URLs and advanced features.
 
 **Note:** Ngrok requires a free account and authtoken for authentication. Sign up at [https://ngrok.com](https://ngrok.com). Free tunnels use random URLs that change on each restart.
@@ -128,6 +130,8 @@ Usage 📖
 * 3.Start the local HTTP server (via app UI).
 * 4.The app will generate a public ngrok URL—share or use it in a browser.
 * 5.Access the device remotely at http://localhost:8080 (local) or the ngrok URL (remote).
+* 5a.On macOS, you can also use **Finder → Go → Connect to Server…** and enter the local URL shown by the app to browse and copy files both directions.
+* 5b.For **FlyingCarpet** or similar no-network tools, share files **to AROMA** from the sender, or long-press a file inside AROMA and choose **Share** to send it back out through Android’s share sheet.
 * 6.You can automate uploading of your file with curl like this
 ```bash
 curl -u admin:password -F "uploadedFile=@/Users/myuser/Downloads/app-release.apk" http://192.168.1.67:8080/

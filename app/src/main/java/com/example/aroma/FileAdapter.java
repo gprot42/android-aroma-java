@@ -30,6 +30,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
 
     public interface OnFileClickListener {
         void onFileClick(File file);
+        void onFileLongClick(View anchor, File file);
     }
 
     public FileAdapter(Context context, List<File> files, OnFileClickListener listener) {
@@ -54,6 +55,10 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.ViewHolder> {
         holder.textView.setTextColor(isDarkTheme ? 0xFFFFFFFF : 0xFF111111);
         holder.itemView.setBackgroundColor(isDarkTheme ? 0xFF16213e : 0xFFFFFFFF);
         holder.itemView.setOnClickListener(v -> listener.onFileClick(file));
+        holder.itemView.setOnLongClickListener(v -> {
+            listener.onFileLongClick(v, file);
+            return true;
+        });
     }
 
     @Override

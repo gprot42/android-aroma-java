@@ -13,6 +13,7 @@ public class CredentialsManager {
     private static final String KEY_NGROK_TOKEN = "ngrok_token";
     private static final String KEY_FOLDER_TYPE = "folder_type";
     private static final String KEY_THEME = "theme";
+    private static final String KEY_ENABLE_HOTSPOT = "enable_hotspot";
     
     private static final String DEFAULT_USERNAME = "admin";
     private static final String DEFAULT_PASSWORD = "password";
@@ -98,5 +99,13 @@ public class CredentialsManager {
 
     public void setTheme(int theme) {
         prefs.edit().putInt(KEY_THEME, theme).apply();
+    }
+
+    public boolean isHotspotEnabled() {
+        return prefs.getBoolean(KEY_ENABLE_HOTSPOT, false);
+    }
+
+    public void setHotspotEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_ENABLE_HOTSPOT, enabled).apply();
     }
 }
