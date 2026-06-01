@@ -61,4 +61,8 @@ dependencies {
     }
 
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'  // Added for Base64 support on minSdk < 26
+
+    // LocalSend: TLS cert generation + JSON
+    implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
+    implementation 'com.google.code.gson:gson:2.10.1'
 }

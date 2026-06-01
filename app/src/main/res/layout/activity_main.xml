@@ -161,18 +161,6 @@
                     android:textIsSelectable="true" />
 
                 <TextView
-                    android:id="@+id/flyingcarpet_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:padding="12dp"
-                    android:background="#0d0d1a"
-                    android:text="@string/flyingcarpet_hint"
-                    android:textColor="#8bd3ff"
-                    android:textSize="12sp"
-                    android:visibility="visible" />
-
-                <TextView
                     android:id="@+id/hotspot_info"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -306,6 +294,60 @@
                 android:layout_marginHorizontal="16dp"
                 android:background="#16213e"
                 android:padding="8dp" />
+
+            <!-- LocalSend Nearby Devices Card -->
+            <LinearLayout
+                android:id="@+id/localsend_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:orientation="vertical"
+                android:background="#16213e"
+                android:padding="14dp"
+                android:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Nearby Devices"
+                        android:textColor="#4da6ff"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/localsend_status_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Scanning..."
+                        android:textColor="#888888"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/localsend_peers_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/localsend_no_peers_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No LocalSend-compatible devices found yet.\nInstall LocalSend on your Mac/iPhone to transfer files."
+                        android:textColor="#666666"
+                        android:textSize="12sp"
+                        android:gravity="center"
+                        android:padding="12dp" />
+                </LinearLayout>
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>

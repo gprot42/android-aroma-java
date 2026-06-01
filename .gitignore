@@ -85,3 +85,7 @@ dump.rdb
 
 # Virtual environments
 .venv
+
+# Android build output
+app/build/
+*.idsig

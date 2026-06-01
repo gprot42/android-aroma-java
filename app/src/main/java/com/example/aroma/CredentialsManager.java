@@ -2,6 +2,7 @@ package com.example.aroma;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 
 public class CredentialsManager {
     private static final String PREFS_NAME = "aroma_settings";
@@ -14,6 +15,10 @@ public class CredentialsManager {
     private static final String KEY_FOLDER_TYPE = "folder_type";
     private static final String KEY_THEME = "theme";
     private static final String KEY_ENABLE_HOTSPOT = "enable_hotspot";
+    private static final String KEY_LOCALSEND_ENABLED = "localsend_enabled";
+    private static final String KEY_LOCALSEND_ALIAS   = "localsend_alias";
+    private static final String KEY_LOCALSEND_PORT    = "localsend_port";
+    private static final int    DEFAULT_LOCALSEND_PORT = 53317;
     
     private static final String DEFAULT_USERNAME = "admin";
     private static final String DEFAULT_PASSWORD = "password";
@@ -107,5 +112,31 @@ public class CredentialsManager {
 
     public void setHotspotEnabled(boolean enabled) {
         prefs.edit().putBoolean(KEY_ENABLE_HOTSPOT, enabled).apply();
+    }
+
+    // ---- LocalSend ----
+
+    public boolean isLocalSendEnabled() {
+        return prefs.getBoolean(KEY_LOCALSEND_ENABLED, false);
+    }
+
+    public void setLocalSendEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_LOCALSEND_ENABLED, enabled).apply();
+    }
+
+    public String getDeviceAlias() {
+        return prefs.getString(KEY_LOCALSEND_ALIAS, Build.MODEL);
+    }
+
+    public void setDeviceAlias(String alias) {
+        prefs.edit().putString(KEY_LOCALSEND_ALIAS, alias).apply();
+    }
+
+    public int getLocalSendPort() {
+        return prefs.getInt(KEY_LOCALSEND_PORT, DEFAULT_LOCALSEND_PORT);
+    }
+
+    public void setLocalSendPort(int port) {
+        prefs.edit().putInt(KEY_LOCALSEND_PORT, port).apply();
     }
 }

@@ -53,12 +53,56 @@ import java.util.Locale;
 
 public class MainActivity extends Activity implements ServerEventListener {
     private static final String TAG = "AROMA";
-    private static final int STORAGE_PERMISSION_CODE = 1;
+    private static final int STORAGE_PERMISSION_CODE  = 1;
     private static final int NOTIFICATION_PERMISSION_CODE = 2;
-    private static final int HOTSPOT_PERMISSION_CODE = 3;
+    private static final int HOTSPOT_PERMISSION_CODE  = 3;
+    private static final int REQUEST_CODE_PICK_FILES  = 4;
 
     private ServerService serverService;
     private boolean serviceBound = false;
+
+    // ---- LocalSend ----
+    private LocalSendService localSendService;
+    private boolean localSendBound = false;
+    private LocalSendPeer pendingSendPeer = null;
+
+    private final ServiceConnection localSendConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            localSendService = ((LocalSendService.LocalBinder) service).getService();
+            localSendBound = true;
+            localSendService.setCallback(localSendCallback);
+            updatePeerList(localSendService.getPeers());
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            localSendBound = false;
+            localSendService = null;
+        }
+    };
+
+    private final LocalSendService.Callback localSendCallback = new LocalSendService.Callback() {
+        @Override
+        public void onPeerListChanged(List<LocalSendPeer> peers) {
+            updatePeerList(peers);
+        }
+        @Override
+        public void onIncomingRequest(LocalSendService.InboundSession session) {
+            new LocalSendReceiveDialog(MainActivity.this, localSendService).show(session);
+        }
+        @Override
+        public void onReceiveComplete(String senderAlias, List<String> fileNames) {
+            Toast.makeText(MainActivity.this, "Files received — check Downloads/LocalSend/",
+                    Toast.LENGTH_LONG).show();
+        }
+        @Override
+        public void onSendResult(boolean success, String message) {
+            Toast.makeText(MainActivity.this,
+                    success ? "Sent: " + message : "Send failed: " + message,
+                    Toast.LENGTH_LONG).show();
+        }
+    };
+    // ---- end LocalSend ----
 
     private Button toggleButton;
     private Button qrButton;
@@ -73,7 +117,6 @@ public class MainActivity extends Activity implements ServerEventListener {
     private TextView urlText;
     private TextView publicUrlText;
     private TextView macTransferText;
-    private TextView flyingCarpetText;
     private TextView hotspotInfoText;
     private TextView folderPathText;
     private TextView storageInfoText;
@@ -131,7 +174,6 @@ public class MainActivity extends Activity implements ServerEventListener {
         urlText = findViewById(R.id.url_text);
         publicUrlText = findViewById(R.id.public_url_text);
         macTransferText = findViewById(R.id.mac_transfer_text);
-        flyingCarpetText = findViewById(R.id.flyingcarpet_text);
         hotspotInfoText = findViewById(R.id.hotspot_info);
         hotspotButton = findViewById(R.id.hotspot_button);
         hotspotQrButton = findViewById(R.id.hotspot_qr_button);
@@ -201,10 +243,6 @@ public class MainActivity extends Activity implements ServerEventListener {
         useTunnelCheckBox.setTextColor(textSecondary);
         storageInfoText.setTextColor(textSecondary);
         activityLogText.setTextColor(textSecondary);
-        if (flyingCarpetText != null) {
-            flyingCarpetText.setTextColor(isDark ? 0xFF8bd3ff : 0xFF005f8f);
-            flyingCarpetText.setBackgroundColor(isDark ? 0xFF0d0d1a : 0xFFeef8ff);
-        }
         
         settingsButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(panelColor));
         qrButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(panelColor));
@@ -502,6 +540,8 @@ public class MainActivity extends Activity implements ServerEventListener {
         Intent serviceIntent = new Intent(this, ServerService.class);
         startService(serviceIntent);
         bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+
+        startLocalSendService();
     }
 
     private void toggleServer() {
@@ -907,7 +947,6 @@ public class MainActivity extends Activity implements ServerEventListener {
     private void updateHotspotVisibility() {
         boolean hotspotEnabled = new CredentialsManager(this).isHotspotEnabled();
         hotspotButton.setVisibility(hotspotEnabled ? View.VISIBLE : View.GONE);
-        flyingCarpetText.setVisibility(hotspotEnabled ? View.VISIBLE : View.GONE);
         if (!hotspotEnabled) {
             hotspotInfoText.setVisibility(View.GONE);
             hotspotActions.setVisibility(View.GONE);
@@ -955,7 +994,92 @@ public class MainActivity extends Activity implements ServerEventListener {
             unbindService(serviceConnection);
             serviceBound = false;
         }
+        if (localSendBound) {
+            if (localSendService != null) localSendService.setCallback(null);
+            unbindService(localSendConnection);
+            localSendBound = false;
+        }
         super.onDestroy();
+    }
+
+    // ---- LocalSend peer list UI ----
+
+    private void startLocalSendService() {
+        CredentialsManager cm = new CredentialsManager(this);
+        if (!cm.isLocalSendEnabled()) return;
+        Intent i = new Intent(this, LocalSendService.class);
+        startService(i);
+        bindService(i, localSendConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void updatePeerList(List<LocalSendPeer> peers) {
+        runOnUiThread(() -> {
+            android.widget.LinearLayout container = findViewById(R.id.localsend_peers_container);
+            TextView noPeers = findViewById(R.id.localsend_no_peers_text);
+            TextView statusText = findViewById(R.id.localsend_status_text);
+            if (container == null) return;
+
+            // Remove peer buttons, keep noPeers TextView
+            int i = 0;
+            while (i < container.getChildCount()) {
+                if (container.getChildAt(i) == noPeers) { i++; continue; }
+                container.removeViewAt(i);
+            }
+
+            if (peers == null || peers.isEmpty()) {
+                if (noPeers != null) noPeers.setVisibility(View.VISIBLE);
+                if (statusText != null) statusText.setText("Scanning...");
+                return;
+            }
+
+            if (noPeers != null) noPeers.setVisibility(View.GONE);
+            if (statusText != null) statusText.setText(peers.size() + " found");
+
+            for (LocalSendPeer peer : peers) {
+                Button btn = new Button(this);
+                btn.setText(peer.alias + "  (" + peer.ip + ")");
+                btn.setTextColor(0xFFffffff);
+                btn.setBackgroundColor(0xFF0e3460);
+                android.widget.LinearLayout.LayoutParams lp =
+                        new android.widget.LinearLayout.LayoutParams(
+                                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.setMargins(0, 4, 0, 4);
+                btn.setLayoutParams(lp);
+                btn.setOnClickListener(v -> pickFilesForPeer(peer));
+                container.addView(btn);
+            }
+        });
+    }
+
+    private void pickFilesForPeer(LocalSendPeer peer) {
+        pendingSendPeer = peer;
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        startActivityForResult(intent, REQUEST_CODE_PICK_FILES);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_PICK_FILES && resultCode == RESULT_OK && data != null) {
+            List<android.net.Uri> uris = new ArrayList<>();
+            if (data.getClipData() != null) {
+                for (int i = 0; i < data.getClipData().getItemCount(); i++) {
+                    uris.add(data.getClipData().getItemAt(i).getUri());
+                }
+            } else if (data.getData() != null) {
+                uris.add(data.getData());
+            }
+            if (!uris.isEmpty() && pendingSendPeer != null && localSendBound) {
+                localSendService.sendFilesToPeer(pendingSendPeer, uris);
+                Toast.makeText(this, "Sending " + uris.size() + " file(s) to " + pendingSendPeer.alias,
+                        Toast.LENGTH_SHORT).show();
+            }
+            pendingSendPeer = null;
+        }
     }
 
     private void addLogEntry(String message) {

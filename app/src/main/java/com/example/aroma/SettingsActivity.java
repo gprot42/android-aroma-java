@@ -14,8 +14,11 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import android.content.Intent;
 
 public class SettingsActivity extends Activity {
     private EditText usernameEdit;
@@ -50,6 +53,22 @@ public class SettingsActivity extends Activity {
         TextView versionText = findViewById(R.id.version_text);
         Button saveButton = findViewById(R.id.save_button);
         versionText.setText(getString(R.string.app_version_format, BuildConfig.APP_VERSION));
+
+        // LocalSend enable/disable
+        Switch localsendSwitch = findViewById(R.id.localsendSwitch);
+        localsendSwitch.setChecked(credentialsManager.isLocalSendEnabled());
+        localsendSwitch.setOnCheckedChangeListener((b, checked) -> {
+            credentialsManager.setLocalSendEnabled(checked);
+            Intent svc = new Intent(this, LocalSendService.class);
+            if (checked) {
+                startService(svc);
+            } else {
+                stopService(svc);
+            }
+            Toast.makeText(this,
+                    checked ? "LocalSend enabled" : "LocalSend disabled",
+                    Toast.LENGTH_SHORT).show();
+        });
 
         setupSpinners();
         loadSettings();

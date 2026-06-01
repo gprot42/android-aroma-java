@@ -20,8 +20,6 @@
     <string name="share_file">Share file</string>
     <string name="share_imported">Imported shared file(s)</string>
     <string name="airdrop_mode_hint">AirDrop-style support uses Android share targets plus Mac Finder/WebDAV where available.</string>
-    <string name="flyingcarpet_hint">No-network transfer: send files to AROMA from FlyingCarpet or share AROMA files back out via Android Share.</string>
-    <string name="flyingcarpet_settings_note">FlyingCarpet compatibility is supported through Android share intents, including no-network transfers initiated by FlyingCarpet.</string>
     <string name="hotspot_start">Start Hotspot Transfer (no WiFi needed)</string>
     <string name="hotspot_stop">Stop Hotspot Transfer</string>
     <string name="hotspot_starting">Starting hotspot…</string>
@@ -55,6 +53,9 @@
     <string name="auto_start_server">Auto-start server on app launch</string>
     <string name="save_ngrok_token">Remember ngrok token</string>
     <string name="enable_hotspot_mode">Enable in-app hotspot tools</string>
+    <string name="localsend_section">Nearby Transfer (LocalSend)</string>
+    <string name="enable_localsend">Enable LocalSend</string>
+    <string name="localsend_note">Discover and exchange files with other LocalSend-compatible devices (Mac, iOS, Windows, Linux, Android) on the same WiFi or hotspot. Disabled by default.</string>
     <string name="port_range_error">Port must be between 1024 and 65535</string>
     <string name="port_invalid_error">Invalid port number</string>
     <string name="settings_saved">Settings saved</string>
