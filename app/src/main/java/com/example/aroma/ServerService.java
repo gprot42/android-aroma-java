@@ -6,6 +6,8 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.Build;
@@ -40,6 +42,12 @@ public class ServerService extends Service {
     private ServerEventListener eventListener;
     private final IBinder binder = new LocalBinder();
     private volatile String preferredLocalIp;
+
+    // mDNS / NSD
+    private static final String NSD_SERVICE_TYPE = "_aroma._tcp.";
+    private static final String NSD_SERVICE_NAME  = "AROMA";
+    private NsdManager nsdManager;
+    private NsdManager.RegistrationListener nsdListener;
 
     public class LocalBinder extends Binder {
         ServerService getService() {
@@ -124,6 +132,7 @@ public class ServerService extends Service {
 
         try {
             server = new WebServer(currentPort, rootDir, this, username, password);
+            server.setApkInstallEnabled(credentialsManager.isApkInstallEnabled());
             if (eventListener != null) {
                 server.setEventListener(eventListener);
             }
@@ -141,6 +150,8 @@ public class ServerService extends Service {
             Log.w(TAG, "Could not determine local IP address. Device may not be connected to a network.");
         }
         currentUrl = "http://" + ip + ":" + currentPort;
+
+        registerNsd(currentPort);
 
         if (useTunnel) {
             if (authToken == null || authToken.isEmpty()) {
@@ -182,6 +193,7 @@ public class ServerService extends Service {
     }
 
     public void stopServer() {
+        unregisterNsd();
         if (server != null) {
             server.stop();
             server = null;
@@ -224,6 +236,57 @@ public class ServerService extends Service {
         this.eventListener = listener;
         if (server != null) {
             server.setEventListener(listener);
+        }
+    }
+
+    private void registerNsd(int port) {
+        try {
+            NsdServiceInfo info = new NsdServiceInfo();
+            info.setServiceName(NSD_SERVICE_NAME);
+            info.setServiceType(NSD_SERVICE_TYPE);
+            info.setPort(port);
+            // TXT record attributes — readable by any mDNS browser
+            info.setAttribute("path",    "/_aroma_diag");
+            info.setAttribute("version", BuildConfig.APP_VERSION);
+
+            nsdListener = new NsdManager.RegistrationListener() {
+                @Override
+                public void onServiceRegistered(NsdServiceInfo i) {
+                    Log.d(TAG, "NSD registered: " + i.getServiceName() + " port=" + i.getPort());
+                }
+                @Override
+                public void onRegistrationFailed(NsdServiceInfo i, int code) {
+                    Log.w(TAG, "NSD registration failed, errorCode=" + code);
+                }
+                @Override
+                public void onServiceUnregistered(NsdServiceInfo i) {
+                    Log.d(TAG, "NSD unregistered: " + i.getServiceName());
+                }
+                @Override
+                public void onUnregistrationFailed(NsdServiceInfo i, int code) {
+                    Log.w(TAG, "NSD unregistration failed, errorCode=" + code);
+                }
+            };
+
+            nsdManager = (NsdManager) getSystemService(NSD_SERVICE);
+            if (nsdManager != null) {
+                nsdManager.registerService(info, NsdManager.PROTOCOL_DNS_SD, nsdListener);
+            } else {
+                Log.w(TAG, "NSD service not available on this device");
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "NSD registration error: " + e.getMessage());
+        }
+    }
+
+    private void unregisterNsd() {
+        if (nsdManager != null && nsdListener != null) {
+            try {
+                nsdManager.unregisterService(nsdListener);
+            } catch (Exception e) {
+                Log.w(TAG, "NSD unregister error: " + e.getMessage());
+            }
+            nsdListener = null;
         }
     }
 

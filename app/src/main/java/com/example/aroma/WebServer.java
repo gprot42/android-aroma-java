@@ -31,6 +31,7 @@ public class WebServer extends NanoHTTPD {
     private final String username;
     private final String password;
     private ServerEventListener eventListener;
+    private boolean apkInstallEnabled = true;
     // Last ~200 diagnostic events for /_aroma_diag
     private static final java.util.Deque<String> DIAG_LOG = new java.util.concurrent.ConcurrentLinkedDeque<>();
     private static final int DIAG_MAX = 300;
@@ -157,6 +158,10 @@ public class WebServer extends NanoHTTPD {
         this.eventListener = listener;
     }
 
+    public void setApkInstallEnabled(boolean enabled) {
+        this.apkInstallEnabled = enabled;
+    }
+
     private String getClientIp(IHTTPSession session) {
         String ip = session.getHeaders().get("x-forwarded-for");
         if (ip == null || ip.isEmpty()) {
@@ -238,6 +243,15 @@ public class WebServer extends NanoHTTPD {
         if (uri.equals("/api/exec")) {
             if (method == Method.POST) {
                 return handleExec(session);
+            }
+        }
+
+        if (uri.equals("/api/install-apk")) {
+            if (method == Method.POST) {
+                return handleApkInstall(session);
+            }
+            if (method == Method.GET) {
+                return serveApkInstallPage();
             }
         }
 
@@ -344,6 +358,9 @@ public class WebServer extends NanoHTTPD {
         html.append("<div class='header-buttons'>");
         html.append("<button class='theme-toggle' onclick='toggleTheme()' title='Toggle theme'>&#9788;</button>");
         html.append("<a href='/terminal' class='header-btn' style='background:#28a745;border-color:#28a745;color:#fff'>Terminal</a>");
+        if (apkInstallEnabled) {
+            html.append("<a href='/api/install-apk' class='header-btn' style='background:#6f42c1;border-color:#6f42c1;color:#fff'>Install APK</a>");
+        }
         html.append("<a href='#' class='header-btn' onclick='showModal(\"createFolderModal\");return false;'>+ New Folder</a>");
         html.append("<a href='#' class='header-btn' onclick='showModal(\"aboutModal\");return false;'>Help</a>");
         html.append("</div>");
@@ -1799,6 +1816,162 @@ public class WebServer extends NanoHTTPD {
         }
     }
     
+    private Response serveApkInstallPage() {
+        if (!apkInstallEnabled) {
+            return newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain",
+                    "APK install endpoint is disabled in Settings.");
+        }
+        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'>" +
+                "<meta name='viewport' content='width=device-width,initial-scale=1'>" +
+                "<style>" +
+                "body{font-family:system-ui,sans-serif;background:#1a1a2e;color:#eee;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:20px;box-sizing:border-box}" +
+                ".card{background:#16213e;border-radius:12px;padding:40px;max-width:480px;width:100%;text-align:center}" +
+                "h2{color:#4da6ff;margin-top:0}" +
+                "p{color:#aaa;font-size:0.9em;line-height:1.6}" +
+                "input[type=file]{width:100%;padding:10px;background:#0d0d1a;color:#eee;border:1px solid #333;border-radius:6px;margin:12px 0;cursor:pointer}" +
+                ".btn{background:#4da6ff;color:#fff;border:none;padding:12px 28px;border-radius:6px;cursor:pointer;font-size:1em;width:100%;margin-top:8px}" +
+                ".btn:hover{background:#3a95ef}" +
+                ".btn:disabled{background:#333;color:#666;cursor:not-allowed}" +
+                "#status{margin-top:16px;font-size:0.9em;min-height:1.5em}" +
+                ".back{display:inline-block;margin-top:20px;color:#4da6ff;text-decoration:none;font-size:0.85em}" +
+                "</style></head><body>" +
+                "<div class='card'>" +
+                "<h2>APK Installer</h2>" +
+                "<p>Select an <code>.apk</code> file to upload and install on this Android device.</p>" +
+                "<form id='installForm'>" +
+                "<input type='file' id='apkFile' accept='.apk,application/vnd.android.package-archive'>" +
+                "<button type='submit' class='btn' id='installBtn' disabled>Install APK</button>" +
+                "</form>" +
+                "<div id='status'></div>" +
+                "<a class='back' href='/'>Back to File Manager</a>" +
+                "</div>" +
+                "<script>" +
+                "const fileInput=document.getElementById('apkFile');" +
+                "const installBtn=document.getElementById('installBtn');" +
+                "const statusDiv=document.getElementById('status');" +
+                "fileInput.addEventListener('change',function(){installBtn.disabled=!this.files.length});" +
+                "document.getElementById('installForm').addEventListener('submit',async function(e){" +
+                "  e.preventDefault();" +
+                "  let file=fileInput.files[0];" +
+                "  if(!file)return;" +
+                "  if(!file.name.toLowerCase().endsWith('.apk')){statusDiv.style.color='#ff6b6b';statusDiv.textContent='Error: file must be a .apk';return}" +
+                "  installBtn.disabled=true;" +
+                "  statusDiv.style.color='#4da6ff';" +
+                "  statusDiv.textContent='Uploading '+file.name+'...';" +
+                "  let formData=new FormData();" +
+                "  formData.append('apkFile',file);" +
+                "  try{" +
+                "    let res=await fetch('/api/install-apk',{method:'POST',body:formData});" +
+                "    let text=await res.text();" +
+                "    if(res.ok){statusDiv.style.color='#28a745';statusDiv.textContent='Install prompt triggered on device. '+text}" +
+                "    else{statusDiv.style.color='#ff6b6b';statusDiv.textContent='Error: '+text}" +
+                "  }catch(err){statusDiv.style.color='#ff6b6b';statusDiv.textContent='Request failed: '+err.message}" +
+                "  installBtn.disabled=false;" +
+                "});" +
+                "</script>" +
+                "</body></html>";
+        return newFixedLengthResponse(Response.Status.OK, "text/html", html);
+    }
+
+    private Response handleApkInstall(IHTTPSession session) {
+        if (!apkInstallEnabled) {
+            return newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain",
+                    "APK install endpoint is disabled in Settings.");
+        }
+        try {
+            Map<String, String> files = new HashMap<>();
+            session.parseBody(files);
+
+            // Find the uploaded APK temp file
+            String tempPath = null;
+            String originalName = "install.apk";
+            for (String key : files.keySet()) {
+                if (key.startsWith("apkFile") || key.startsWith("uploadedFile")) {
+                    tempPath = files.get(key);
+                    // Try to get original filename from params
+                    Map<String, List<String>> params = session.getParameters();
+                    List<String> nameParam = params.get("apkFileName");
+                    if (nameParam != null && !nameParam.isEmpty()) {
+                        originalName = nameParam.get(0);
+                    }
+                    break;
+                }
+            }
+
+            if (tempPath == null || tempPath.isEmpty()) {
+                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain",
+                        "No APK file received.");
+            }
+
+            File tempFile = new File(tempPath);
+            if (!tempFile.exists()) {
+                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain",
+                        "Uploaded file not found.");
+            }
+
+            // Validate it's an APK (check magic bytes: PK\x03\x04)
+            if (tempFile.length() < 4) {
+                tempFile.delete();
+                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain",
+                        "File too small to be a valid APK.");
+            }
+            try (FileInputStream fis = new FileInputStream(tempFile)) {
+                byte[] magic = new byte[4];
+                if (fis.read(magic) == 4) {
+                    if (magic[0] != 0x50 || magic[1] != 0x4B || magic[2] != 0x03 || magic[3] != 0x04) {
+                        tempFile.delete();
+                        return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain",
+                                "File does not appear to be a valid APK (ZIP) file.");
+                    }
+                }
+            }
+
+            // Copy to a stable location in the app cache
+            File apkDir = new File(context.getCacheDir(), "aroma-apk-install");
+            apkDir.mkdirs();
+            // Sanitize filename
+            String safeName = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
+            if (!safeName.toLowerCase().endsWith(".apk")) safeName += ".apk";
+            File apkFile = new File(apkDir, safeName);
+            try (FileInputStream in = new FileInputStream(tempFile);
+                 FileOutputStream out = new FileOutputStream(apkFile)) {
+                byte[] buf = new byte[64 * 1024];
+                int n;
+                while ((n = in.read(buf)) != -1) {
+                    out.write(buf, 0, n);
+                }
+                out.getFD().sync();
+            }
+            tempFile.delete();
+
+            // Trigger install intent via FileProvider
+            android.net.Uri apkUri;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                apkUri = androidx.core.content.FileProvider.getUriForFile(
+                        context, context.getPackageName() + ".fileprovider", apkFile);
+            } else {
+                apkUri = android.net.Uri.fromFile(apkFile);
+            }
+
+            android.content.Intent installIntent = new android.content.Intent(
+                    android.content.Intent.ACTION_VIEW);
+            installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+            installIntent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            installIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(installIntent);
+
+            diag("APK install triggered: " + safeName + " (" + apkFile.length() + " bytes)");
+            return newFixedLengthResponse(Response.Status.OK, "text/plain",
+                    "Install prompt launched for: " + safeName);
+
+        } catch (Exception e) {
+            diag("APK install error: " + e.getMessage());
+            Log.e("AROMA", "APK install failed: " + e.getMessage(), e);
+            return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain",
+                    "APK install failed: " + e.getMessage());
+        }
+    }
+
     private Response jsonResponse(String json) {
         Response response = newFixedLengthResponse(Response.Status.OK, "application/json", json);
         response.addHeader("Access-Control-Allow-Origin", "*");

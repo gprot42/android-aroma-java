@@ -27,6 +27,7 @@ public class SettingsActivity extends Activity {
     private CheckBox autoStartCheckbox;
     private CheckBox saveTokenCheckbox;
     private CheckBox enableHotspotCheckbox;
+    private Switch apkInstallSwitch;
     private Spinner folderSpinner;
     private Spinner themeSpinner;
     private Button showPasswordButton;
@@ -47,6 +48,7 @@ public class SettingsActivity extends Activity {
         autoStartCheckbox = findViewById(R.id.auto_start_checkbox);
         saveTokenCheckbox = findViewById(R.id.save_token_checkbox);
         enableHotspotCheckbox = findViewById(R.id.enable_hotspot_checkbox);
+        apkInstallSwitch = findViewById(R.id.apkInstallSwitch);
         folderSpinner = findViewById(R.id.folder_spinner);
         themeSpinner = findViewById(R.id.theme_spinner);
         showPasswordButton = findViewById(R.id.show_password_button);
@@ -54,19 +56,12 @@ public class SettingsActivity extends Activity {
         Button saveButton = findViewById(R.id.save_button);
         versionText.setText(getString(R.string.app_version_format, BuildConfig.APP_VERSION));
 
-        // LocalSend enable/disable
-        Switch localsendSwitch = findViewById(R.id.localsendSwitch);
-        localsendSwitch.setChecked(credentialsManager.isLocalSendEnabled());
-        localsendSwitch.setOnCheckedChangeListener((b, checked) -> {
-            credentialsManager.setLocalSendEnabled(checked);
-            Intent svc = new Intent(this, LocalSendService.class);
-            if (checked) {
-                startService(svc);
-            } else {
-                stopService(svc);
-            }
+        // APK install enable/disable
+        apkInstallSwitch.setChecked(credentialsManager.isApkInstallEnabled());
+        apkInstallSwitch.setOnCheckedChangeListener((b, checked) -> {
+            credentialsManager.setApkInstallEnabled(checked);
             Toast.makeText(this,
-                    checked ? "LocalSend enabled" : "LocalSend disabled",
+                    checked ? "APK install endpoint enabled" : "APK install endpoint disabled",
                     Toast.LENGTH_SHORT).show();
         });
 

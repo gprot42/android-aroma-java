@@ -53,9 +53,9 @@
     <string name="auto_start_server">Auto-start server on app launch</string>
     <string name="save_ngrok_token">Remember ngrok token</string>
     <string name="enable_hotspot_mode">Enable in-app hotspot tools</string>
-    <string name="localsend_section">Nearby Transfer (LocalSend)</string>
-    <string name="enable_localsend">Enable LocalSend</string>
-    <string name="localsend_note">Discover and exchange files with other LocalSend-compatible devices (Mac, iOS, Windows, Linux, Android) on the same WiFi or hotspot. Disabled by default.</string>
+    <string name="apk_install_section">APK Install Server</string>
+    <string name="enable_apk_install">Enable APK install endpoint</string>
+    <string name="apk_install_note">When enabled, uploading a .apk file to /api/install-apk triggers an install prompt on the device. Enabled by default — disable here if you don\'t need it.</string>
     <string name="port_range_error">Port must be between 1024 and 65535</string>
     <string name="port_invalid_error">Invalid port number</string>
     <string name="settings_saved">Settings saved</string>

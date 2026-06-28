@@ -225,6 +225,7 @@
             android:textSize="12sp"
             android:textColor="#888888" />
 
+        <!-- APK Install Server Section -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -235,24 +236,24 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/localsend_section"
+            android:text="@string/apk_install_section"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#ffffff" />
 
         <Switch
-            android:id="@+id/localsendSwitch"
+            android:id="@+id/apkInstallSwitch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="@string/enable_localsend"
+            android:text="@string/enable_apk_install"
             android:textColor="#ffffff" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/localsend_note"
+            android:text="@string/apk_install_note"
             android:textSize="12sp"
             android:textColor="#888888" />
 
