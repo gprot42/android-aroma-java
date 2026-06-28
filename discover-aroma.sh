@@ -65,8 +65,10 @@ while getopts ":p:u:w:s:t:j:T:mSqh" opt; do
     esac
 done
 
-log()  { [ "$QUIET" -eq 0 ] && echo "$*" || true; }
-info() { [ "$QUIET" -eq 0 ] && echo "  $*" || true; }
+# All progress/status output goes to stderr so it never pollutes the
+# FOUND-line stream that gets written to $RESULTS.
+log()  { [ "$QUIET" -eq 0 ] && echo "$*" >&2 || true; }
+info() { [ "$QUIET" -eq 0 ] && echo "  $*" >&2 || true; }
 
 # ── subnet auto-detection ─────────────────────────────────────────────────────
 detect_subnet() {
@@ -368,9 +370,9 @@ elif [ "$MDNS_ONLY" -eq 1 ]; then
 else
     log "  Mode    : mDNS first, then subnet scan if needed"
     log ""
-    # Capture mDNS output
+    # Capture only FOUND lines from mDNS (log messages go to stderr now)
     MDNS_OUT=$(mktemp)
-    discover_mdns > "$MDNS_OUT" 2>&1 || true
+    discover_mdns > "$MDNS_OUT" || true
     cat "$MDNS_OUT" | tee -a "$RESULTS"
 
     if [ ! -s "$RESULTS" ]; then
@@ -382,7 +384,9 @@ else
     rm -f "$MDNS_OUT"
 fi
 
-COUNT=$(grep -c "^FOUND:" "$RESULTS" 2>/dev/null || echo 0)
+# grep -c exits 1 when count is 0, which would trigger || echo 0 and
+# produce "0\n0". Use || true so grep's own "0" output is kept as-is.
+COUNT=$(grep -c "^FOUND:" "$RESULTS" 2>/dev/null || true)
 rm -f "$RESULTS"
 
 log ""
