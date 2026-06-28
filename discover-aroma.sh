@@ -305,7 +305,8 @@ probe_host() {
 
     http_code=$(echo "$body" | tail -1)
     local content
-    content=$(echo "$body" | head -n -1)
+    # 'head -n -1' is GNU-only; awk prints all lines except the last (BSD-safe)
+    content=$(echo "$body" | awk 'NR>1{print prev} {prev=$0}')
 
     if [ "$http_code" = "200" ] && echo "$content" | grep -q "AROMA diagnostics"; then
         echo "FOUND: http://$host:$PORT  (scan — authenticated)"
