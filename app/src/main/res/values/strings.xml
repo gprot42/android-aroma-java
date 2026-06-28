@@ -56,6 +56,9 @@
     <string name="apk_install_section">APK Install Server</string>
     <string name="enable_apk_install">Enable APK install endpoint</string>
     <string name="apk_install_note">When enabled, uploading a .apk file to /api/install-apk triggers an install prompt on the device. Enabled by default — disable here if you don\'t need it.</string>
+    <string name="bonjour_section">Bonjour / mDNS Discovery</string>
+    <string name="enable_bonjour">Advertise via Bonjour (mDNS)</string>
+    <string name="bonjour_note">When enabled, the server announces itself as _aroma._tcp on the local network so discover-aroma.sh can find it instantly without scanning. Enabled by default.</string>
     <string name="port_range_error">Port must be between 1024 and 65535</string>
     <string name="port_invalid_error">Invalid port number</string>
     <string name="settings_saved">Settings saved</string>

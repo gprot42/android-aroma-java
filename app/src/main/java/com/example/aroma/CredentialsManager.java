@@ -15,6 +15,7 @@ public class CredentialsManager {
     private static final String KEY_THEME = "theme";
     private static final String KEY_ENABLE_HOTSPOT = "enable_hotspot";
     private static final String KEY_APK_INSTALL_ENABLED = "apk_install_enabled";
+    private static final String KEY_BONJOUR_ENABLED = "bonjour_enabled";
     
     private static final String DEFAULT_USERNAME = "admin";
     private static final String DEFAULT_PASSWORD = "password";
@@ -118,5 +119,15 @@ public class CredentialsManager {
 
     public void setApkInstallEnabled(boolean enabled) {
         prefs.edit().putBoolean(KEY_APK_INSTALL_ENABLED, enabled).apply();
+    }
+
+    // ---- Bonjour / mDNS advertisement ----
+
+    public boolean isBonjourEnabled() {
+        return prefs.getBoolean(KEY_BONJOUR_ENABLED, true);
+    }
+
+    public void setBonjourEnabled(boolean enabled) {
+        prefs.edit().putBoolean(KEY_BONJOUR_ENABLED, enabled).apply();
     }
 }

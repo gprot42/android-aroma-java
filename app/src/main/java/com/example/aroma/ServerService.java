@@ -6,6 +6,9 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.net.wifi.WifiManager;
@@ -151,8 +154,9 @@ public class ServerService extends Service {
         }
         currentUrl = "http://" + ip + ":" + currentPort;
 
-        registerNsd(currentPort);
-
+        if (credentialsManager.isBonjourEnabled()) {
+            registerNsd(currentPort);
+        }
         if (useTunnel) {
             if (authToken == null || authToken.isEmpty()) {
                 stopServer();
@@ -248,6 +252,31 @@ public class ServerService extends Service {
             // TXT record attributes — readable by any mDNS browser
             info.setAttribute("path",    "/_aroma_diag");
             info.setAttribute("version", BuildConfig.APP_VERSION);
+
+            // Android 12+ (API 31): explicitly bind to the WiFi network so
+            // mDNS packets go out on wlan0 and not a VPN tunnel interface.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                ConnectivityManager cm =
+                        (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+                if (cm != null) {
+                    Network wifiNetwork = null;
+                    for (Network network : cm.getAllNetworks()) {
+                        NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+                        if (caps != null
+                                && caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                                && !caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+                            wifiNetwork = network;
+                            break;
+                        }
+                    }
+                    if (wifiNetwork != null) {
+                        info.setNetwork(wifiNetwork);
+                        Log.d(TAG, "NSD: bound to WiFi network " + wifiNetwork);
+                    } else {
+                        Log.w(TAG, "NSD: no WiFi network found, using default");
+                    }
+                }
+            }
 
             nsdListener = new NsdManager.RegistrationListener() {
                 @Override

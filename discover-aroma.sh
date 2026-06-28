@@ -109,18 +109,32 @@ discover_mdns_dnssd() {
         local resolve
         resolve=$(timeout 2 dns-sd -L "$name" _aroma._tcp local. 2>/dev/null || true)
 
-        # Extract host and port from: "Name can be reached at host.local.:PORT"
+        # Extract host and port from:
+        # "Name._aroma._tcp.local. can be reached at host.local.:PORT (interface N)"
+        # Use awk to split on whitespace then split the host:port token on ':'
         local host port
-        host=$(echo "$resolve" | grep -oE 'reached at [^ ]+' | awk '{print $3}' | sed 's/\.$//' | head -1)
-        port=$(echo "$resolve" | grep -oE 'reached at [^:]+:[0-9]+' | grep -oE ':[0-9]+' | tr -d ':' | head -1)
+        host=$(echo "$resolve" \
+            | awk '/can be reached at/{
+                for(i=1;i<=NF;i++) if($i=="at") { print $(i+1); exit }
+            }' \
+            | awk -F: '{print $1}' \
+            | sed 's/\.$//')
+        port=$(echo "$resolve" \
+            | awk '/can be reached at/{
+                for(i=1;i<=NF;i++) if($i=="at") { print $(i+1); exit }
+            }' \
+            | grep -oE ':[0-9]+' | tr -d ':')
 
         [ -z "$host" ] && continue
         [ -z "$port" ] && port="$PORT"
 
-        # Resolve .local hostname to IP
-        local ip
-        ip=$(dns-sd -G v4 "$host.local." 2>/dev/null | timeout 2 awk '/Add/{print $6; exit}' || true)
-        [ -z "$ip" ] && ip="$host"  # use hostname directly if resolution fails
+        # Resolve .local hostname → IPv4 address
+        local ip=""
+        if command -v dns-sd &>/dev/null; then
+            ip=$(timeout 2 dns-sd -G v4 "${host}.local." 2>/dev/null \
+                | awk '/Add/{print $6; exit}' || true)
+        fi
+        [ -z "$ip" ] && ip="$host"  # fall back to hostname if resolution fails
 
         echo "FOUND: http://$ip:$port  (mDNS/dns-sd — $name)"
     done <<< "$names"

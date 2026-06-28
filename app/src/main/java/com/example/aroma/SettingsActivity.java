@@ -28,6 +28,7 @@ public class SettingsActivity extends Activity {
     private CheckBox saveTokenCheckbox;
     private CheckBox enableHotspotCheckbox;
     private Switch apkInstallSwitch;
+    private Switch bonjourSwitch;
     private Spinner folderSpinner;
     private Spinner themeSpinner;
     private Button showPasswordButton;
@@ -49,6 +50,7 @@ public class SettingsActivity extends Activity {
         saveTokenCheckbox = findViewById(R.id.save_token_checkbox);
         enableHotspotCheckbox = findViewById(R.id.enable_hotspot_checkbox);
         apkInstallSwitch = findViewById(R.id.apkInstallSwitch);
+        bonjourSwitch = findViewById(R.id.bonjourSwitch);
         folderSpinner = findViewById(R.id.folder_spinner);
         themeSpinner = findViewById(R.id.theme_spinner);
         showPasswordButton = findViewById(R.id.show_password_button);
@@ -62,6 +64,15 @@ public class SettingsActivity extends Activity {
             credentialsManager.setApkInstallEnabled(checked);
             Toast.makeText(this,
                     checked ? "APK install endpoint enabled" : "APK install endpoint disabled",
+                    Toast.LENGTH_SHORT).show();
+        });
+
+        // Bonjour / mDNS advertisement enable/disable
+        bonjourSwitch.setChecked(credentialsManager.isBonjourEnabled());
+        bonjourSwitch.setOnCheckedChangeListener((b, checked) -> {
+            credentialsManager.setBonjourEnabled(checked);
+            Toast.makeText(this,
+                    checked ? "Bonjour advertising enabled" : "Bonjour advertising disabled",
                     Toast.LENGTH_SHORT).show();
         });
 
