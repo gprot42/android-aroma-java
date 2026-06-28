@@ -255,6 +255,12 @@ public class WebServer extends NanoHTTPD {
             }
         }
 
+        if (uri.equals("/api/install-apk-path")) {
+            if (method == Method.POST) {
+                return handleApkInstallFromPath(session);
+            }
+        }
+
         if (method == Method.GET) {
             if (eventListener != null) {
                 eventListener.onClientConnected(getClientIp(session));
@@ -433,6 +439,9 @@ public class WebServer extends NanoHTTPD {
                         html.append("<a class='btn btn-primary' href='").append(link).append("?preview' target='_blank'>Preview</a>");
                     }
                     html.append("<a class='btn btn-success' href='").append(link).append("?download'>Download</a>");
+                    if (lowerName.endsWith(".apk") && apkInstallEnabled) {
+                        html.append("<button class='btn' style='background:#6f42c1;color:#fff' onclick='installApkFromPath(\"").append(link).append("\",event)'>Install</button>");
+                    }
                     html.append("</div>");
                 }
                 html.append("</div>");
@@ -659,6 +668,7 @@ public class WebServer extends NanoHTTPD {
         html.append("async function startUpload(){if(uploadFiles.length===0||isUploading)return;document.body.dataset.allowNavigate='false';uploadCancelled=false;isUploading=true;pendingFailures=[];updateRetryButton();setStopButtonVisible(true);let overwrite=document.getElementById('overwriteCheck').checked;let res=await runUpload(uploadFiles,overwrite,false);if(!uploadCancelled&&res.failed&&res.failed.length>0){let pass2=await runUpload(res.failed.map(f=>f.file),true,true);res.success+=pass2.success;res.skipped+=pass2.skipped;res.failed=pass2.failed}finalizeUpload(res,false)}");
         html.append("document.addEventListener('click',function(e){let anchor=e.target.closest('a');if(!anchor)return;let href=anchor.getAttribute('href');if(!href||href.startsWith('#')||anchor.target==='_blank')return;if(isUploading){e.preventDefault();window.open(anchor.href,'_blank')}},true);");
         html.append("document.querySelector('.file-list').addEventListener('contextmenu',function(e){if(e.target===this||e.target.classList.contains('empty')){showEmptyContextMenu(e)}});");
+        html.append("async function installApkFromPath(link,e){e.preventDefault();e.stopPropagation();let name=decodeURIComponent(link.split('/').pop());if(!confirm('Install '+name+' on this Android device?'))return;try{let fd=new FormData();fd.append('path',link);let res=await fetch('/api/install-apk-path',{method:'POST',body:fd});let text=await res.text();if(res.ok){alert('Install prompt triggered on device. Check your Android screen for the installer dialog.')}else{alert('Install failed: '+text)}}catch(err){alert('Request failed: '+err.message)}}");
         html.append("initTheme();");
         html.append("</script>");
         
@@ -1888,9 +1898,14 @@ public class WebServer extends NanoHTTPD {
             for (String key : files.keySet()) {
                 if (key.startsWith("apkFile") || key.startsWith("uploadedFile")) {
                     tempPath = files.get(key);
-                    // Try to get original filename from params
+                    // Try to get original filename from params.
+                    // The form sends no explicit apkFileName field, but NanoHTTPD stores
+                    // the Content-Disposition filename in parms under the same field name.
                     Map<String, List<String>> params = session.getParameters();
                     List<String> nameParam = params.get("apkFileName");
+                    if (nameParam == null || nameParam.isEmpty()) {
+                        nameParam = params.get(key); // NanoHTTPD stores original filename here
+                    }
                     if (nameParam != null && !nameParam.isEmpty()) {
                         originalName = nameParam.get(0);
                     }
@@ -1953,12 +1968,7 @@ public class WebServer extends NanoHTTPD {
                 apkUri = android.net.Uri.fromFile(apkFile);
             }
 
-            android.content.Intent installIntent = new android.content.Intent(
-                    android.content.Intent.ACTION_VIEW);
-            installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-            installIntent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            installIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(installIntent);
+            launchApkInstallIntent(apkUri);
 
             diag("APK install triggered: " + safeName + " (" + apkFile.length() + " bytes)");
             return newFixedLengthResponse(Response.Status.OK, "text/plain",
@@ -1970,6 +1980,126 @@ public class WebServer extends NanoHTTPD {
             return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain",
                     "APK install failed: " + e.getMessage());
         }
+    }
+
+    private Response handleApkInstallFromPath(IHTTPSession session) {
+        if (!apkInstallEnabled) {
+            return newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain",
+                    "APK install endpoint is disabled in Settings.");
+        }
+        try {
+            Map<String, String> files = new HashMap<>();
+            session.parseBody(files);
+
+            Map<String, List<String>> params = session.getParameters();
+            List<String> pathParam = params.get("path");
+            if (pathParam == null || pathParam.isEmpty() || pathParam.get(0).trim().isEmpty()) {
+                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain",
+                        "Missing 'path' parameter.");
+            }
+
+            String relPath = pathParam.get(0).trim();
+            // Strip leading slash to make it relative to rootDir
+            if (relPath.startsWith("/")) relPath = relPath.substring(1);
+
+            File apkFile = new File(rootDir, relPath);
+            // Security: ensure the resolved path is still inside rootDir
+            String canonicalApk = apkFile.getCanonicalPath();
+            String canonicalRoot = rootDir.getCanonicalPath();
+            if (!canonicalApk.startsWith(canonicalRoot + File.separator) && !canonicalApk.equals(canonicalRoot)) {
+                return newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain", "Access denied.");
+            }
+
+            if (!apkFile.exists() || !apkFile.isFile()) {
+                return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "File not found.");
+            }
+
+            // Validate APK magic bytes (ZIP PK\x03\x04)
+            if (apkFile.length() < 4) {
+                return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain",
+                        "File too small to be a valid APK.");
+            }
+            try (FileInputStream fis = new FileInputStream(apkFile)) {
+                byte[] magic = new byte[4];
+                if (fis.read(magic) == 4) {
+                    if (magic[0] != 0x50 || magic[1] != 0x4B || magic[2] != 0x03 || magic[3] != 0x04) {
+                        return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain",
+                                "File does not appear to be a valid APK (ZIP) file.");
+                    }
+                }
+            }
+
+            // Copy to a stable location in the app cache (required for FileProvider)
+            File apkDir = new File(context.getCacheDir(), "aroma-apk-install");
+            apkDir.mkdirs();
+            String safeName = apkFile.getName().replaceAll("[^a-zA-Z0-9._-]", "_");
+            if (!safeName.toLowerCase().endsWith(".apk")) safeName += ".apk";
+            File cachedApk = new File(apkDir, safeName);
+            try (FileInputStream in = new FileInputStream(apkFile);
+                 FileOutputStream out = new FileOutputStream(cachedApk)) {
+                byte[] buf = new byte[64 * 1024];
+                int n;
+                while ((n = in.read(buf)) != -1) {
+                    out.write(buf, 0, n);
+                }
+                out.getFD().sync();
+            }
+
+            // Trigger install intent via FileProvider
+            android.net.Uri apkUri;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                apkUri = androidx.core.content.FileProvider.getUriForFile(
+                        context, context.getPackageName() + ".fileprovider", cachedApk);
+            } else {
+                apkUri = android.net.Uri.fromFile(cachedApk);
+            }
+
+            launchApkInstallIntent(apkUri);
+
+            diag("APK install from path triggered: " + safeName + " (" + cachedApk.length() + " bytes)");
+            return newFixedLengthResponse(Response.Status.OK, "text/plain",
+                    "Install prompt launched for: " + safeName);
+
+        } catch (Exception e) {
+            diag("APK install from path error: " + e.getMessage());
+            Log.e("AROMA", "APK install from path failed: " + e.getMessage(), e);
+            return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain",
+                    "APK install failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Fires an APK install intent, explicitly targeting the system package installer
+     * so that third-party stores (APKPure, XAPK Installer, etc.) do not appear in
+     * a chooser dialog. System apps are always visible to PackageManager queries
+     * regardless of Android 11+ package-visibility restrictions, so no extra
+     * permission or <queries> declaration is needed.
+     */
+    private void launchApkInstallIntent(android.net.Uri apkUri) {
+        android.content.Intent installIntent = new android.content.Intent(
+                android.content.Intent.ACTION_VIEW);
+        installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+        installIntent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        installIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        // Prefer the system package installer to avoid the chooser dialog that
+        // appears when third-party stores also handle this MIME type.
+        try {
+            java.util.List<android.content.pm.ResolveInfo> resolvers =
+                    context.getPackageManager().queryIntentActivities(installIntent, 0);
+            for (android.content.pm.ResolveInfo ri : resolvers) {
+                if ((ri.activityInfo.applicationInfo.flags
+                        & android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0) {
+                    installIntent.setPackage(ri.activityInfo.packageName);
+                    diag("APK install: using system installer " + ri.activityInfo.packageName);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            diag("APK install: resolver query failed (" + e.getMessage() + "), proceeding without setPackage");
+        }
+
+        context.startActivity(installIntent);
     }
 
     private Response jsonResponse(String json) {
