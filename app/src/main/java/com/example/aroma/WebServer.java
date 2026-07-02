@@ -2079,13 +2079,19 @@ public class WebServer extends NanoHTTPD {
      * permission or <queries> declaration is needed.
      *
      * On Android 10+ (API 29+), starting an Activity directly from a Service that
-     * has no visible UI is silently blocked by the OS background-activity-start
-     * restriction (no exception is thrown -- the call just no-ops). Since installs
-     * are triggered remotely over HTTP while the app sits in the background, we
-     * can't rely on context.startActivity() alone. Instead, always post a
-     * high-priority "tap to install" notification whose PendingIntent carries the
-     * install intent; the resulting user tap is a genuine user-initiated gesture,
-     * which the OS always permits.
+     * has no visible UI is subject to the OS background-activity-start
+     * restriction. Calling context.startActivity() here from ServerService has
+     * been observed to commit a PackageInstaller session for the target package
+     * without a live confirmation UI to complete it -- leaving an orphaned,
+     * never-applied session that then blocks *all* subsequent installs of that
+     * package (including plain `adb install`) with INSTALL_FAILED_DUPLICATE_PACKAGE,
+     * which surfaces to the user as a generic "App not installed" error.
+     *
+     * To avoid this, we never call startActivity() directly from here. Instead we
+     * always post a high-priority "tap to install" notification whose
+     * PendingIntent carries the install intent; the resulting user tap is a
+     * genuine user-initiated gesture that reliably keeps the installer UI alive
+     * until the user completes or cancels it.
      */
     private void launchApkInstallIntent(android.net.Uri apkUri) {
         android.content.Intent installIntent = new android.content.Intent(
@@ -2111,15 +2117,6 @@ public class WebServer extends NanoHTTPD {
             diag("APK install: resolver query failed (" + e.getMessage() + "), proceeding without setPackage");
         }
 
-        // Try a direct launch first (works when the app happens to have a visible
-        // Activity in the foreground), but don't rely on it -- always back it up
-        // with a tap-to-install notification, since startActivity() from a
-        // background service silently does nothing on Android 10+.
-        try {
-            context.startActivity(installIntent);
-        } catch (Exception e) {
-            diag("APK install: direct startActivity failed (" + e.getMessage() + "), falling back to notification");
-        }
         postInstallNotification(installIntent);
     }
 
