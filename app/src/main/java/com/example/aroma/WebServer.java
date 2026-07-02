@@ -668,7 +668,7 @@ public class WebServer extends NanoHTTPD {
         html.append("async function startUpload(){if(uploadFiles.length===0||isUploading)return;document.body.dataset.allowNavigate='false';uploadCancelled=false;isUploading=true;pendingFailures=[];updateRetryButton();setStopButtonVisible(true);let overwrite=document.getElementById('overwriteCheck').checked;let res=await runUpload(uploadFiles,overwrite,false);if(!uploadCancelled&&res.failed&&res.failed.length>0){let pass2=await runUpload(res.failed.map(f=>f.file),true,true);res.success+=pass2.success;res.skipped+=pass2.skipped;res.failed=pass2.failed}finalizeUpload(res,false)}");
         html.append("document.addEventListener('click',function(e){let anchor=e.target.closest('a');if(!anchor)return;let href=anchor.getAttribute('href');if(!href||href.startsWith('#')||anchor.target==='_blank')return;if(isUploading){e.preventDefault();window.open(anchor.href,'_blank')}},true);");
         html.append("document.querySelector('.file-list').addEventListener('contextmenu',function(e){if(e.target===this||e.target.classList.contains('empty')){showEmptyContextMenu(e)}});");
-        html.append("async function installApkFromPath(link,e){e.preventDefault();e.stopPropagation();let name=decodeURIComponent(link.split('/').pop());if(!confirm('Install '+name+' on this Android device?'))return;try{let fd=new FormData();fd.append('path',link);let res=await fetch('/api/install-apk-path',{method:'POST',body:fd});let text=await res.text();if(res.ok){alert('Install prompt triggered on device. Check your Android screen for the installer dialog.')}else{alert('Install failed: '+text)}}catch(err){alert('Request failed: '+err.message)}}");
+        html.append("async function installApkFromPath(link,e){e.preventDefault();e.stopPropagation();let name=decodeURIComponent(link.split('/').pop());if(!confirm('Install '+name+' on this Android device?'))return;try{let fd=new FormData();fd.append('path',link);let res=await fetch('/api/install-apk-path',{method:'POST',body:fd});let text=await res.text();if(res.ok){alert('Install notification posted on device. Pull down the notification shade on the phone and tap it to install.')}else{alert('Install failed: '+text)}}catch(err){alert('Request failed: '+err.message)}}");
         html.append("initTheme();");
         html.append("</script>");
         
@@ -1873,7 +1873,7 @@ public class WebServer extends NanoHTTPD {
                 "  try{" +
                 "    let res=await fetch('/api/install-apk',{method:'POST',body:formData});" +
                 "    let text=await res.text();" +
-                "    if(res.ok){statusDiv.style.color='#28a745';statusDiv.textContent='Install prompt triggered on device. '+text}" +
+                "    if(res.ok){statusDiv.style.color='#28a745';statusDiv.textContent=text}" +
                 "    else{statusDiv.style.color='#ff6b6b';statusDiv.textContent='Error: '+text}" +
                 "  }catch(err){statusDiv.style.color='#ff6b6b';statusDiv.textContent='Request failed: '+err.message}" +
                 "  installBtn.disabled=false;" +
@@ -1972,7 +1972,7 @@ public class WebServer extends NanoHTTPD {
 
             diag("APK install triggered: " + safeName + " (" + apkFile.length() + " bytes)");
             return newFixedLengthResponse(Response.Status.OK, "text/plain",
-                    "Install prompt launched for: " + safeName);
+                    "Install notification posted for: " + safeName + ". Check the notification shade on the device and tap it to install.");
 
         } catch (Exception e) {
             diag("APK install error: " + e.getMessage());
@@ -2058,7 +2058,7 @@ public class WebServer extends NanoHTTPD {
 
             diag("APK install from path triggered: " + safeName + " (" + cachedApk.length() + " bytes)");
             return newFixedLengthResponse(Response.Status.OK, "text/plain",
-                    "Install prompt launched for: " + safeName);
+                    "Install notification posted for: " + safeName + ". Check the notification shade on the device and tap it to install.");
 
         } catch (Exception e) {
             diag("APK install from path error: " + e.getMessage());
@@ -2068,12 +2068,24 @@ public class WebServer extends NanoHTTPD {
         }
     }
 
+    private static final String INSTALL_NOTIFICATION_CHANNEL_ID = "aroma_install_channel";
+    private static final int INSTALL_NOTIFICATION_ID = 2;
+
     /**
      * Fires an APK install intent, explicitly targeting the system package installer
      * so that third-party stores (APKPure, XAPK Installer, etc.) do not appear in
      * a chooser dialog. System apps are always visible to PackageManager queries
      * regardless of Android 11+ package-visibility restrictions, so no extra
      * permission or <queries> declaration is needed.
+     *
+     * On Android 10+ (API 29+), starting an Activity directly from a Service that
+     * has no visible UI is silently blocked by the OS background-activity-start
+     * restriction (no exception is thrown -- the call just no-ops). Since installs
+     * are triggered remotely over HTTP while the app sits in the background, we
+     * can't rely on context.startActivity() alone. Instead, always post a
+     * high-priority "tap to install" notification whose PendingIntent carries the
+     * install intent; the resulting user tap is a genuine user-initiated gesture,
+     * which the OS always permits.
      */
     private void launchApkInstallIntent(android.net.Uri apkUri) {
         android.content.Intent installIntent = new android.content.Intent(
@@ -2099,7 +2111,55 @@ public class WebServer extends NanoHTTPD {
             diag("APK install: resolver query failed (" + e.getMessage() + "), proceeding without setPackage");
         }
 
-        context.startActivity(installIntent);
+        // Try a direct launch first (works when the app happens to have a visible
+        // Activity in the foreground), but don't rely on it -- always back it up
+        // with a tap-to-install notification, since startActivity() from a
+        // background service silently does nothing on Android 10+.
+        try {
+            context.startActivity(installIntent);
+        } catch (Exception e) {
+            diag("APK install: direct startActivity failed (" + e.getMessage() + "), falling back to notification");
+        }
+        postInstallNotification(installIntent);
+    }
+
+    private void postInstallNotification(android.content.Intent installIntent) {
+        try {
+            android.app.NotificationManager manager =
+                    (android.app.NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager == null) return;
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                android.app.NotificationChannel channel = new android.app.NotificationChannel(
+                        INSTALL_NOTIFICATION_CHANNEL_ID,
+                        "AROMA Install Prompts",
+                        android.app.NotificationManager.IMPORTANCE_HIGH);
+                channel.setDescription("Tap to complete an APK install triggered from AROMA");
+                manager.createNotificationChannel(channel);
+            }
+
+            android.app.PendingIntent pendingIntent = android.app.PendingIntent.getActivity(
+                    context, INSTALL_NOTIFICATION_ID, installIntent,
+                    android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE);
+
+            android.app.Notification.Builder builder;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                builder = new android.app.Notification.Builder(context, INSTALL_NOTIFICATION_CHANNEL_ID);
+            } else {
+                builder = new android.app.Notification.Builder(context);
+            }
+            builder.setContentTitle("AROMA: APK ready to install")
+                    .setContentText("Tap to install the update")
+                    .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                    .setContentIntent(pendingIntent)
+                    .setAutoCancel(true)
+                    .setPriority(android.app.Notification.PRIORITY_HIGH);
+
+            manager.notify(INSTALL_NOTIFICATION_ID, builder.build());
+            diag("APK install: posted tap-to-install notification");
+        } catch (Exception e) {
+            diag("APK install: failed to post install notification (" + e.getMessage() + ")");
+        }
     }
 
     private Response jsonResponse(String json) {
